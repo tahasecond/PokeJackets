@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import './App.css';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import PokemonStatsPage from './pages/PokemonStatsPage';
-import HomePage from './pages/HomePage';
+import PokemonStatsPage from './pages/PokemonStatsPage/PokemonStatsPage';
+import HomePage from './pages/HomePage/HomePage';
 
 function App() {
   const [count, setCount] = useState(0);

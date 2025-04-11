@@ -1,5 +1,6 @@
 // The main page we start on
 import { Link } from 'react-router-dom'
+import "./HomePage.css"
 
 const HomePage = () => {
     return(

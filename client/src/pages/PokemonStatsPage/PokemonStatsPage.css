@@ -1,0 +1,31 @@
+.pokemon-page {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .pokemon-page .header-container {
+    display: flex;
+    flex: 1;
+  }
+  
+  .pokemon-page .search-bar input {
+    
+  }
+  
+  .pokemon-page .main-container {
+    display: flex;
+    flex: 9;
+  }
+  
+  .pokemon-page .image-container {
+    
+  }
+  
+  .pokemon-page .stats-container {
+    
+  }
+  
