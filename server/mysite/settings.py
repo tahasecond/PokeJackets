@@ -126,3 +126,5 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
 ]
 CORS_ALLOW_ALL_ORIGINS = True
+
+API_KEY = "f5d8fa24-ee86-4648-a232-d40befa7d9ba"
