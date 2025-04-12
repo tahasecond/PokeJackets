@@ -2,9 +2,6 @@ import './PokemonStatsPage.css';
 import { Link } from "react-router-dom";
 import pikapika from '../../assets/pikapika.png';
 
-
-// use process.env.POKEMON_API_KEY to use API key.
-
 const PokemonStatsPage = () => {
     
   return (
