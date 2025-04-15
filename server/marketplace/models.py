@@ -29,3 +29,11 @@ class RequestTrade(models.Model):
 
     def __str__(self):
         return f"{self.requester.username} offers {self.offered_pokemon_name} for {self.listing.pokemon_name}"
+    
+
+class User_wallet(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.balance} PD"
