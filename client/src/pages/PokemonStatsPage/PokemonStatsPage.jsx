@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import "./PokemonStatsPage.css"
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 
 const PokemonStatsPage = () => {
+  const { id } = useParams();
   const [pokemon, setPokemon] = useState([]);
   const [filteredPokemon, setFilteredPokemon] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,9 +18,18 @@ const PokemonStatsPage = () => {
         setPokemon(data.data);
         setFilteredPokemon(data.data);
         
-        // Select 10 random Pokémon for the carousel
-        const shuffled = [...data.data].sort(() => 0.5 - Math.random());
-        setCarouselPokemon(shuffled.slice(0, 10));
+        // If we have an ID from the URL, find and select that Pokemon
+        if (id) {
+          const pokemonById = data.data.find(p => p.id === id);
+          if (pokemonById) {
+            setSelectedPokemon(pokemonById);
+            setSearchTerm(pokemonById.name);
+          }
+        } else {
+          // If no ID, select random Pokemon for the carousel
+          const shuffled = [...data.data].sort(() => 0.5 - Math.random());
+          setCarouselPokemon(shuffled.slice(0, 10));
+        }
         
         setLoading(false);
       })
@@ -27,7 +37,7 @@ const PokemonStatsPage = () => {
         console.error('Error fetching Pokémon:', err);
         setLoading(false);
       });
-  }, []);
+  }, [id]);
 
   const handleSearch = (e) => {
     const value = e.target.value;

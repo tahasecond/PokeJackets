@@ -1,12 +1,19 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Components.css';
 
-const Card = ({ title, price, bodyText, imageSrc, rarity, type }) => {
+const Card = ({ id, title, price, bodyText, imageSrc, rarity, type }) => {
+  const navigate = useNavigate();
+  
+  const handleCardClick = () => {
+    navigate(`/pokemon/${id}`);
+  };
+  
   return (
-    <div className="card">
+    <div className="card" onClick={handleCardClick}>
       <div className="card-image">
         {imageSrc ? (
-          <img src={imageSrc} alt={title} />
+          <img src={imageSrc} alt={title} className="card-pokemon-image" />
         ) : (
           <div className="placeholder-image"></div>
         )}
@@ -17,12 +24,19 @@ const Card = ({ title, price, bodyText, imageSrc, rarity, type }) => {
         <p className="card-body">{bodyText}</p>
         {rarity && type && (
           <p className="card-details">
-            {title} - {rarity} - {type}
+            {rarity} - {type}
           </p>
         )}
       </div>
       {rarity && (
-        <button className="buy-now-btn">Buy Now</button>
+        <button 
+          className="buy-now-btn"
+          onClick={(e) => {
+            e.stopPropagation(); // Stop the event from bubbling up to parent
+          }}
+        >
+          Buy Now
+        </button>
       )}
     </div>
   );

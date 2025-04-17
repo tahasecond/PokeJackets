@@ -171,3 +171,61 @@
   font-size: 1.3rem;
   margin-bottom: 20px;
 }
+
+/* Loading State */
+.loading {
+  text-align: center;
+  padding: 50px;
+  font-size: 18px;
+}
+
+/* Carousel Section */
+.carousel-section {
+  margin: 40px 0;
+}
+
+.cards-carousel {
+  display: flex;
+  overflow-x: auto;
+  gap: 15px;
+  padding: 20px 0;
+  scroll-behavior: smooth;
+}
+
+.carousel-item {
+  flex: 0 0 auto;
+  width: 150px;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  background-color: white;
+  transition: transform 0.3s;
+  cursor: pointer;
+}
+
+.carousel-item:hover {
+  transform: scale(1.05);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.carousel-image {
+  width: 100%;
+  height: auto;
+  border-radius: 10px 10px 0 0;
+  object-fit: cover;
+}
+
+.carousel-info {
+  padding: 10px;
+}
+
+.carousel-name {
+  font-weight: bold;
+  margin: 0 0 5px 0;
+  font-size: 14px;
+}
+
+.carousel-rarity {
+  font-size: 12px;
+  color: #666;
+  margin: 0;
+}

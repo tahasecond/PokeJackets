@@ -4,6 +4,8 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import PokemonStatsPage from './pages/PokemonStatsPage/PokemonStatsPage';
 import HomePage from './pages/HomePage/HomePage';
 import MarketplacePage from './pages/MarketplacePage/MarketplacePage';
+import AiGenerationPage from './pages/AiGenerationPage/AiGenerationPage';
+import ErrorBoundary from './components/ErrorBoundary';
 
 function App() {
   const [count, setCount] = useState(0);
@@ -14,6 +16,12 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/PokemonStatsPage" element={<PokemonStatsPage />} />
         <Route path="/marketplace" element={<MarketplacePage />} />
+        <Route path="/pokemon/:id" element={<PokemonStatsPage />} />
+        <Route path="/aigeneration" element={
+          <ErrorBoundary>
+            <AiGenerationPage />
+          </ErrorBoundary>
+        } />
       </Routes>
     </Router>
   );
