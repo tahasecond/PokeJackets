@@ -39,9 +39,15 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
+    "django.contrib.staticfiles", # needed for django admin css
     'corsheaders',
     'aigeneration',
+    'marketplace',
+    'pokemon',
+    'trading',
+    'users',
 ]
+STATIC_URL = '/static/' # needed for django admin css
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -135,7 +141,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
 ]
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = False
 
 API_KEY = "f5d8fa24-ee86-4648-a232-d40befa7d9ba"
 
