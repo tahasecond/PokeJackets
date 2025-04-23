@@ -8,6 +8,7 @@ import AiGenerationPage from './pages/AiGenerationPage/AiGenerationPage';
 import ErrorBoundary from './components/ErrorBoundary';
 import Register from './pages/Register/Register';
 import Login from './pages/Login/Login';
+import TradingPage from './pages/TradingPage/TradingPage'
 import { logoutUser } from './api';
 
 function App() {
@@ -22,14 +23,14 @@ function App() {
     <ErrorBoundary>
       <Router>
         <Routes>
-          <Route path="/register" element={isLoggedIn ? <Navigate to = "/" /> : <Register />} />
-          <Route path="/login" element={isLoggedIn ? <Navigate to = "/" /> :<Login setIsLoggedIn={setIsLoggedIn} />} />
-          
+          <Route path="/register" element={isLoggedIn ? <Navigate to="/" /> : <Register />} />
+          <Route path="/login" element={isLoggedIn ? <Navigate to="/" /> : <Login setIsLoggedIn={setIsLoggedIn} />} />
+
           <Route path="/*" element={
-            isLoggedIn ? 
-              <PrivateRoutes onLogout = {handleLogout} /> : 
-              <Navigate to = "/login" />
-              } />
+            isLoggedIn ?
+              <PrivateRoutes onLogout={handleLogout} /> :
+              <Navigate to="/login" />
+          } />
         </Routes>
       </Router>
     </ErrorBoundary>
@@ -39,11 +40,12 @@ function App() {
 function PrivateRoutes({ onLogout }) {
   return (
     <Routes>
-        <Route path="/" element={<HomePage onLogout = {onLogout} />} />
-        <Route path="/PokemonStatsPage" element={<PokemonStatsPage />} />
-        <Route path="/marketplace" element={<MarketplacePage />} />
-        <Route path="/pokemon/:id" element={<PokemonStatsPage />} />
-        <Route path="/aigeneration" element={<AiGenerationPage />} />
+      <Route path="/" element={<HomePage onLogout={onLogout} />} />
+      <Route path="/PokemonStatsPage" element={<PokemonStatsPage />} />
+      <Route path="/marketplace" element={<MarketplacePage />} />
+      <Route path="/pokemon/:id" element={<PokemonStatsPage />} />
+      <Route path="/aigeneration" element={<AiGenerationPage />} />
+      <Route path="/trading" element={<TradingPage />} />
     </Routes>
   );
 }
