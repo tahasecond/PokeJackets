@@ -40,6 +40,8 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles", # needed for django admin css
+    "rest_framework",
+    "rest_framework.authtoken",
     'corsheaders',
     'aigeneration',
     'marketplace',
@@ -47,6 +49,13 @@ INSTALLED_APPS = [
     'trading',
     'users',
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+}
+
 STATIC_URL = '/static/' # needed for django admin css
 
 MIDDLEWARE = [
@@ -59,11 +68,6 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
-
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-]
-
 
 ROOT_URLCONF = "mysite.urls"
 
@@ -141,7 +145,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
 ]
-CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOW_ALL_ORIGINS = True
 
 API_KEY = "f5d8fa24-ee86-4648-a232-d40befa7d9ba"
 

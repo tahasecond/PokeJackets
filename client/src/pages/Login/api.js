@@ -1,3 +1,6 @@
+// const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:8000";
+const API_BASE_URL = "http://localhost:8000";
+
 export const loginUser = async (credentials) => {
     try {
         const response = await fetch(`${API_BASE_URL}/api/login/`, {
@@ -7,22 +10,27 @@ export const loginUser = async (credentials) => {
         });
 
         const data = await response.json();
-        
-        if (data.success && data.token) {
-            localStorage.setItem("token", data.token);
+
+        if (response.status === 200 ) {
+            return {
+                success: true,
+                message: data.message,
+                token: data.token
+            };
         }
 
+        console.error("Django error:" + data.error);
         return {
-            success: data.success,
-            message: data.message,
-            token: data.token
-        };
-
+            success: false,
+            message: data.message || "Login failed",
+            error: data.error
+        };  
     } catch (error) {
         console.error("Login error:", error);
         return {
             success: false,
-            message: "Network or server error occurred"
+            message: "Network or server error occurred",
+            error: error.message
         };
     }
 };

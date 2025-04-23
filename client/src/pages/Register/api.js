@@ -33,16 +33,25 @@ export const registerUser = async (userData) => {
 
         const data = await response.json();
         
-        return {
-            success: data.success,
-            message: data.message,
-        };
+        if (response.status === 201) {
+            return {
+                success: true,
+                message: "Registration successful",
+            };
+        }
 
+        console.error("Django error:" + data.error);
+        return {
+            success: false,
+            message: data.message || "Registration failed",
+            error: data.error
+        };
     } catch (error) {
         console.error("Registration error:", error);
         return {
             success: false,
-            message: "Network or server error occurred"
+            message: "Network or server error occurred",
+            error: error.message
         };
     }
 };

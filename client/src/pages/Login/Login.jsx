@@ -3,7 +3,7 @@ import "./Login.css";
 import { useNavigate, Link } from 'react-router-dom';
 import { loginUser } from "./api.js";
 
-const Login = () => {
+const Login = ({ setIsLoggedIn }) => {
     const navigate = useNavigate();
 
     const [formData, setFormData] = useState({
@@ -19,16 +19,25 @@ const Login = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
         setLoading(true);
+        setError("");
+
         try {
-            await loginUser({
+            const response = await loginUser({
                 username: formData.username,
                 password: formData.password
             });
-            navigate("/");
+
+            if (response.success) {
+              localStorage.setItem("token", response.token);
+              setIsLoggedIn(true);
+              navigate("/");
+            } else {
+              setError(response.message);
+            }
         } catch (error) {
-            setError("Login failed. \nMessage: ", error.message, "\nError: ", error);
+            console.error('Login error:', error);
+            setError("An unexpected error occurred");
         } finally {
             setLoading(false);
         }

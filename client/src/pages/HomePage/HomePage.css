@@ -1,0 +1,29 @@
+.home-container {
+    position: relative;
+    min-height: 100vh;
+}
+
+.logout-container {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+}
+
+.logout-button {
+    padding: 8px 16px;
+    background-color: #ff3333;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.logout-button:hover {
+    background-color: #cc0000;
+}
+
+.content {
+    padding: 20px;
+    text-align: center;
+}

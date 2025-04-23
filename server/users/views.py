@@ -4,6 +4,7 @@ from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
 from django.contrib.auth.models import User
+from django.contrib.auth import authenticate
 
 class RegistrationView(APIView):
     def post(self, request):
@@ -30,7 +31,6 @@ class RegistrationView(APIView):
             user = User.objects.create_user(
                 username=username, email=email, password=password
             )
-            token = Token.objects.create(user=user)
 
             return JsonResponse({
                     "success": True,
@@ -53,33 +53,24 @@ class LoginView(APIView):
         try:
             username = request.data.get("username")
             password = request.data.get("password")
-
-            try:
-                user = User.objects.get(username=username)
-            except User.DoesNotExist:
-                return JsonResponse({
-                        "success": False, 
-                        "message": "User not found"
-                    },
-                    status=status.HTTP_404_NOT_FOUND,
-                )
-
-            if check_password(password, user.password):
-                token = Token.objects.get(user=user)
+ 
+            user = authenticate(request, username=username, password=password)
+            if user is not None:
+                token, _ = Token.objects.get_or_create(user=user)
                 return JsonResponse({
                         "success": True,
-                        "message": "You are now logged in!",
+                        "message": "Login successful",
                         "token": token.key
                     },
                     status=status.HTTP_200_OK,
                 )
-            else: 
-                return JsonResponse({
-                        "success": False, 
-                        "message": "Invalid Login Credentials"
-                    },
-                    status=status.HTTP_401_UNAUTHORIZED,
-                )
+            
+            return JsonResponse({
+                    "success": False,
+                    "message": "Invalid username or password"
+                },
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
 
         except Exception as e:
             return JsonResponse({

@@ -24,7 +24,6 @@ const Register = () => {
         
         if (formData.password !== formData.confirmPassword) {
             setError("Passwords do not match");
-            setLoading(false);
             return;
         }
 
@@ -35,15 +34,21 @@ const Register = () => {
         }
 
         setLoading(true);
+        setError("");
+
         try {
-            await registerUser({
+            const response = await registerUser({
                 username: formData.username, 
                 email: formData.email, 
                 password: formData.password
             });
-            navigate("/login");
+            if (response.success) {
+                navigate("/login");
+            } else {
+                setError(response.message);
+            }
         } catch (error) {
-            setError("Registration failed. \nMessage: ", error.message, "\nError: ", error);
+            setError(error.message || "Registration failed");
         } finally {
             setLoading(false);
         }
