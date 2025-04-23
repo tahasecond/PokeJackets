@@ -23,7 +23,7 @@ load_dotenv()
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-sjenx#4fy((t0q5myb7fuc#%rx8$sy@tx5#kzwad5yuxmfu4ug"
+SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -147,7 +147,7 @@ CORS_ALLOWED_ORIGINS = [
 ]
 CORS_ALLOW_ALL_ORIGINS = True
 
-API_KEY = "f5d8fa24-ee86-4648-a232-d40befa7d9ba"
+API_KEY = os.environ.get('API_KEY')
 
 # API Keys
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
@@ -156,3 +156,10 @@ GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
 # Media files
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+EMAIklL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')

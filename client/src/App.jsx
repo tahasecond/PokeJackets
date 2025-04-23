@@ -1,4 +1,3 @@
-import { useEffect, useState, useCallback } from 'react';
 import './App.css';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import PokemonStatsPage from './pages/PokemonStatsPage/PokemonStatsPage';
