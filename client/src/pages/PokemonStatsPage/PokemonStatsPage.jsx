@@ -18,7 +18,6 @@ const PokemonStatsPage = () => {
         setPokemon(data.data);
         setFilteredPokemon(data.data);
         
-        // If we have an ID from the URL, find and select that Pokemon
         if (id) {
           const pokemonById = data.data.find(p => p.id === id);
           if (pokemonById) {
@@ -26,7 +25,6 @@ const PokemonStatsPage = () => {
             setSearchTerm(pokemonById.name);
           }
         } else {
-          // If no ID, select random Pokemon for the carousel
           const shuffled = [...data.data].sort(() => 0.5 - Math.random());
           setCarouselPokemon(shuffled.slice(0, 10));
         }
@@ -48,16 +46,12 @@ const PokemonStatsPage = () => {
     );
 
     setFilteredPokemon(filtered);
-    
-    // If there's an exact match, select that Pokémon
-    if (value) {
-      const exactMatch = pokemon.find(poke => 
-        poke.name.toLowerCase() === value.toLowerCase()
-      );
-      if (exactMatch) {
-        setSelectedPokemon(exactMatch);
-      }
-    }
+    setSelectedPokemon(null); // Clear selection when searching
+  };
+
+  const handlePokemonSelect = (poke) => {
+    setSelectedPokemon(poke);
+    setSearchTerm(poke.name);
   };
 
   const handleCarouselSelect = (poke) => {
@@ -65,6 +59,7 @@ const PokemonStatsPage = () => {
     setSearchTerm(poke.name);
   };
 
+  // Define renderAttack function properly
   const renderAttack = (attack, index) => (
     <div key={index} className="attack-item">
       <div className="attack-header">
@@ -82,6 +77,7 @@ const PokemonStatsPage = () => {
     </div>
   );
 
+  // Define renderWeaknessResistance function properly
   const renderWeaknessResistance = () => {
     const weaknesses = selectedPokemon.weaknesses || [];
     const resistances = selectedPokemon.resistances || [];
@@ -141,24 +137,7 @@ const PokemonStatsPage = () => {
       
       {loading ? (
         <div className="loading">Loading Pokémon cards...</div>
-      ) : !selectedPokemon ? (
-        <div className="carousel-container">
-          <h3>Featured Pokémon Cards</h3>
-          <div className="carousel">
-            {carouselPokemon.map((poke) => (
-              <div 
-                key={poke.id} 
-                className="carousel-card"
-                onClick={() => handleCarouselSelect(poke)}
-              >
-                <img src={poke.images.small} alt={poke.name} className="carousel-image" />
-                <p>{poke.name}</p>
-                <p className="card-set">{poke.set.name}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      ) : (
+      ) : selectedPokemon ? (
         <div className="pokemon-detail-container">
           <div className="image-container">
             <img src={selectedPokemon.images.large} alt={selectedPokemon.name} className="pokemon-image" />
@@ -205,6 +184,62 @@ const PokemonStatsPage = () => {
               
               {renderWeaknessResistance()}
             </div>
+          </div>
+        </div>
+      ) : searchTerm ? (
+        <div className="search-results-container">
+          <h3>Search Results</h3>
+          {filteredPokemon.length > 0 ? (
+            <div className="pokemon-grid">
+              {filteredPokemon.map((poke) => (
+                <div 
+                  key={poke.id} 
+                  className="pokemon-card"
+                  onClick={() => handlePokemonSelect(poke)}
+                >
+                  <img src={poke.images.small} alt={poke.name} className="grid-image" />
+                  <p>{poke.name}</p>
+                  <p className="card-set">{poke.set.name}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="no-results">
+              No Pokémon found matching "{searchTerm}"
+              <div className="carousel-container">
+                <h3>Featured Pokémon Cards</h3>
+                <div className="carousel">
+                  {carouselPokemon.map((poke) => (
+                    <div 
+                      key={poke.id} 
+                      className="carousel-card"
+                      onClick={() => handleCarouselSelect(poke)}
+                    >
+                      <img src={poke.images.small} alt={poke.name} className="carousel-image" />
+                      <p>{poke.name}</p>
+                      <p className="card-set">{poke.set.name}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="carousel-container">
+          <h3>Featured Pokémon Cards</h3>
+          <div className="carousel">
+            {carouselPokemon.map((poke) => (
+              <div 
+                key={poke.id} 
+                className="carousel-card"
+                onClick={() => handleCarouselSelect(poke)}
+              >
+                <img src={poke.images.small} alt={poke.name} className="carousel-image" />
+                <p>{poke.name}</p>
+                <p className="card-set">{poke.set.name}</p>
+              </div>
+            ))}
           </div>
         </div>
       )}
