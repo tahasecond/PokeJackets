@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
 import "./Login.css";
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { loginUser } from "./api.js";
 
-const Login = ({ setIsLoggedIn }) => {
-    const navigate = useNavigate();
-
+const Login = () => {
     const [formData, setFormData] = useState({
         username: "",
         password: "",
@@ -30,8 +28,7 @@ const Login = ({ setIsLoggedIn }) => {
 
             if (response.success) {
               localStorage.setItem("token", response.token);
-              setIsLoggedIn(true);
-              navigate("/");
+              window.location.href = '/';
             } else {
               setError(response.message);
             }

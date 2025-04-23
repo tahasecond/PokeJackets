@@ -2,11 +2,21 @@
 import { Link } from 'react-router-dom'
 import "./HomePage.css"
 
-const HomePage = ({ onLogout }) => {
+
+const HomePage = () => {
+    const handleLogout = () => {
+        try {
+            localStorage.removeItem("token");
+            window.location.href = '/';
+        } catch (error) {
+            console.error("Logout error:", error);
+        }
+    }
+
     return (
         <div className="home-container">
             <div className="logout-container">
-                <button onClick={onLogout} className="logout-button">
+                <button onClick={handleLogout} className="logout-button">
                     Logout
                 </button>
             </div>

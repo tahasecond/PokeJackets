@@ -9,44 +9,42 @@ import ErrorBoundary from './components/ErrorBoundary';
 import Register from './pages/Register/Register';
 import Login from './pages/Login/Login';
 import TradingPage from './pages/TradingPage/TradingPage'
-import { logoutUser } from './api';
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  const handleLogout = useCallback(() => {
-    logoutUser();
-    setIsLoggedIn(false);
-  }, []);
+  const isAuthenticated = () => !!localStorage.getItem('token');
 
   return (
     <ErrorBoundary>
       <Router>
         <Routes>
-          <Route path="/register" element={isLoggedIn ? <Navigate to="/" /> : <Register />} />
-          <Route path="/login" element={isLoggedIn ? <Navigate to="/" /> : <Login setIsLoggedIn={setIsLoggedIn} />} />
-
-          <Route path="/*" element={
-            isLoggedIn ?
-              <PrivateRoutes onLogout={handleLogout} /> :
-              <Navigate to="/login" />
-          } />
+        <Route path="/register" 
+            element={isAuthenticated() ? <Navigate to="/" /> : <Register />} 
+          />
+          <Route path="/login" 
+            element={isAuthenticated() ? <Navigate to="/" /> : <Login />} 
+          />
+          <Route path="/" 
+            element={isAuthenticated() ? <HomePage /> : <Navigate to="/login" />} 
+          />
+          <Route path="/PokemonStatsPage" 
+            element={isAuthenticated() ? <PokemonStatsPage /> : <Navigate to="/login" />} 
+          />
+          <Route path="/marketplace" 
+            element={isAuthenticated() ? <MarketplacePage /> : <Navigate to="/login" />} 
+          />
+          <Route path="/pokemon/:id" 
+            element={isAuthenticated() ? <PokemonStatsPage /> : <Navigate to="/login" />} 
+          />
+          <Route path="/aigeneration" 
+            element={isAuthenticated() ? <AiGenerationPage /> : <Navigate to="/login" />} 
+          />
+          <Route path="/trading" 
+            element={isAuthenticated() ? <TradingPage /> : <Navigate to="/login" />} 
+          />
         </Routes>
       </Router>
     </ErrorBoundary>
   );
 }
 
-function PrivateRoutes({ onLogout }) {
-  return (
-    <Routes>
-      <Route path="/" element={<HomePage onLogout={onLogout} />} />
-      <Route path="/PokemonStatsPage" element={<PokemonStatsPage />} />
-      <Route path="/marketplace" element={<MarketplacePage />} />
-      <Route path="/pokemon/:id" element={<PokemonStatsPage />} />
-      <Route path="/aigeneration" element={<AiGenerationPage />} />
-      <Route path="/trading" element={<TradingPage />} />
-    </Routes>
-  );
-}
 export default App;
