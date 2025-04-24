@@ -1,0 +1,101 @@
+.listing-card {
+  display: flex;
+  flex-direction: column;
+  border-radius: 8px;
+  background-color: white;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+  position: relative;
+}
+
+.listing-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.listing-card-image {
+  height: 200px;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f5f5f5;
+}
+
+.listing-pokemon-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.listing-card-content {
+  padding: 15px;
+  flex-grow: 1;
+}
+
+.listing-card-title {
+  font-size: 16px;
+  font-weight: bold;
+  margin: 0 0 8px 0;
+  color: #333;
+}
+
+.listing-card-price {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0 0 8px 0;
+  color: #4caf50;
+}
+
+.listing-card-details {
+  font-size: 14px;
+  color: #666;
+  margin: 0 0 8px 0;
+}
+
+.listing-card-seller {
+  font-size: 12px;
+  color: #999;
+  margin: 0 0 8px 0;
+}
+
+.listing-card-notes {
+  font-size: 12px;
+  color: #777;
+  margin: 8px 0 0 0;
+  font-style: italic;
+}
+
+.buy-listing-btn {
+  padding: 10px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s;
+  width: 100%;
+  margin-top: auto;
+}
+
+.buy-listing-btn:hover {
+  background-color: #45a049;
+}
+
+.buy-listing-btn:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.loading-card {
+  min-height: 300px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.loading-indicator {
+  color: #666;
+}

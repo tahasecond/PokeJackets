@@ -3,6 +3,23 @@ import './CollectionPage.css';
 import Navbar from '../../components/Navbar';
 import Card from '../../components/Card';
 
+/**
+ * Collection Page Component
+ * 
+ * Displays all Pokemon cards in the user's collection.
+ * 
+ * How the collection system works:
+ * 1. Cards are added to a user's collection in the Django admin
+ * 2. Each card is stored by its unique Pokemon TCG API ID (e.g., "ex8-4")
+ * 3. This component fetches the user's collection from the backend
+ * 4. The backend retrieves the complete card data for each ID
+ * 5. Cards are displayed using the same Card component as the marketplace
+ * 6. When a card is clicked, it navigates to the Pokemon stats page
+ * 
+ * Collection data flow:
+ * Admin adds card → Django stores user+card_id → Frontend fetches collection → 
+ * Backend gets full card data → Frontend displays cards
+ */
 const CollectionPage = () => {
   const [collection, setCollection] = useState([]);
   const [loading, setLoading] = useState(true);

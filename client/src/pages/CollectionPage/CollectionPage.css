@@ -27,6 +27,28 @@
   margin-top: 30px;
 }
 
+.card-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.sell-card-button {
+  margin-top: 10px;
+  padding: 8px;
+  background-color: #ff9800;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s;
+}
+
+.sell-card-button:hover {
+  background-color: #f57c00;
+}
+
 .loading, .error-message, .empty-collection {
   text-align: center;
   padding: 50px;

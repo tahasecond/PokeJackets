@@ -4,6 +4,7 @@ import './MarketplacePage.css';
 import SearchBar from '../../components/SearchBar';
 import Card from '../../components/Card';
 import Navbar from '../../components/Navbar';
+import ListingCard from './ListingCard';
 
 const MarketplacePage = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -12,7 +13,9 @@ const MarketplacePage = () => {
   const [filteredPokemon, setFilteredPokemon] = useState([]);
   const [featuredPokemon, setFeaturedPokemon] = useState([]);
   const [carouselPokemon, setCarouselPokemon] = useState([]);
+  const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [listingsLoading, setListingsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const cardsPerPage = 5;
 
@@ -39,6 +42,29 @@ const MarketplacePage = () => {
     };
     
     fetchUserBalance();
+  }, []);
+
+  // Fetch marketplace listings
+  useEffect(() => {
+    const fetchListings = async () => {
+      try {
+        setListingsLoading(true);
+        const response = await fetch('http://127.0.0.1:8000/api/marketplace/listings/');
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch listings');
+        }
+        
+        const data = await response.json();
+        setListings(data.listings || []);
+      } catch (error) {
+        console.error('Error fetching listings:', error);
+      } finally {
+        setListingsLoading(false);
+      }
+    };
+    
+    fetchListings();
   }, []);
 
   useEffect(() => {
@@ -78,6 +104,23 @@ const MarketplacePage = () => {
   // Handle successful card purchase
   const handleCardPurchased = (newBalance) => {
     setBalance(newBalance);
+    // Reload listings after purchase
+    fetchListings();
+  };
+
+  const fetchListings = async () => {
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/marketplace/listings/');
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch listings');
+      }
+      
+      const data = await response.json();
+      setListings(data.listings || []);
+    } catch (error) {
+      console.error('Error fetching listings:', error);
+    }
   };
 
   // Get current cards for pagination
@@ -116,6 +159,39 @@ const MarketplacePage = () => {
     }
   };
 
+  const handleListingPurchase = async (listingId) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('You must be logged in to purchase listings');
+        return;
+      }
+
+      const response = await fetch('http://127.0.0.1:8000/api/marketplace/buy-listing/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Token ${token}`
+        },
+        body: JSON.stringify({
+          listing_id: listingId
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(`Purchase failed: ${data.message || 'Unknown error'}`);
+      } else {
+        alert(data.message || 'Purchase successful!');
+        setBalance(data.balance);
+        fetchListings();
+      }
+    } catch (err) {
+      alert(`Purchase failed: ${err.message || 'Unknown error'}`);
+    }
+  };
+
   return (
     <div className="marketplace-container">
       <Navbar balance={balance} />
@@ -125,9 +201,29 @@ const MarketplacePage = () => {
             placeholder="Search for Cards" 
             onSearch={handleSearch} 
           />
-          <button className="sell-card-btn">Sell a Card</button>
+          <Link to="/collection" className="sell-card-btn">Sell a Card</Link>
         </div>
         
+        {/* User Listings Section */}
+        <section className="user-listings-section">
+          <h2 className="section-title">User Listings</h2>
+          {listingsLoading ? (
+            <div className="loading">Loading listings...</div>
+          ) : listings.length === 0 ? (
+            <div className="empty-listings">No cards are currently for sale</div>
+          ) : (
+            <div className="user-listings-grid">
+              {listings.map(listing => (
+                <ListingCard
+                  key={listing.id}
+                  listing={listing}
+                  onPurchase={handleListingPurchase}
+                />
+              ))}
+            </div>
+          )}
+        </section>
+
         {loading ? (
           <div className="loading">Loading Pokémon cards...</div>
         ) : (

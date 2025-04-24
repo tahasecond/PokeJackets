@@ -26,7 +26,7 @@ urlpatterns = [
     path("api/aigen/", include("aigeneration.urls")),
     path("api/", include("users.urls")),
     path("", include("trading.urls")),
-    # path("", include("marketplace.urls")),
+    path("api/marketplace/", include("marketplace.urls")),
 ]
 
 # Add media URL in development
