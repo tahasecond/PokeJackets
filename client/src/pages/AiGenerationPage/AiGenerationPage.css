@@ -2,7 +2,7 @@
 .ai-generation-container {
   max-width: 1200px;
   margin: 0 auto;
-  font-family: Arial, sans-serif;
+  font-family: 'Raleway', sans-serif;
   background-color: #fff;
   min-height: 100vh;
   display: flex;
@@ -11,12 +11,7 @@
 
 /* Header Styles */
 .generation-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px 20px;
-  background-color: #e60012;
-  color: white;
+  display: none;
 }
 
 .logo-container {

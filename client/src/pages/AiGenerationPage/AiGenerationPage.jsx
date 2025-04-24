@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import './AiGenerationPage.css';
+import Navbar from '../../components/Navbar';
 
 const AiGenerationPage = () => {
   console.log("Component rendering start");
@@ -119,32 +120,8 @@ const AiGenerationPage = () => {
   console.log("About to return JSX");
   return (
     <div className="ai-generation-container">
-      <header className="generation-header">
-        <div className="logo-container">
-          <Link to="/" className="target-logo">
-            <div className="target-icon"></div>
-            <span className="logo-text">PokéMarket</span>
-          </Link>
-        </div>
-        
-        <nav className="navigation">
-          <Link to="/marketplace" className="nav-button">Market</Link>
-          <Link to="/aigeneration" className="nav-button active">Create</Link>
-          <Link to="/collection" className="nav-button">Collection</Link>
-        </nav>
-        
-        <div className="user-info">
-          <div className="balance-display">
-            <span className="currency-symbol">P</span>
-            <span className="balance-amount">{balance.toLocaleString()}</span>
-          </div>
-          <div className="user-profile">
-            <span className="username">Trainer Red</span>
-            <div className="profile-avatar">TR</div>
-          </div>
-        </div>
-      </header>
-
+      <Navbar balance={balance} />
+      
       <main className="generation-main">
         <div className="generation-title-container">
           <h1 className="generation-title">Create Your Own Pokémon</h1>

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import "./PokemonStatsPage.css"
 import { Link, useParams } from 'react-router-dom';
+import Navbar from '../../components/Navbar';
+
 
 const PokemonStatsPage = () => {
   const { id } = useParams();
@@ -118,12 +120,9 @@ const PokemonStatsPage = () => {
 
   return (
     <div className="main-container">
-      <div className="header-container">
-        <div className="title-container">
-          <div id="return-btn"><Link to="/">Return to Home</Link></div>
-          <div id="title"><h3>Pokémon TCG Cards</h3></div>
-          <div id="subtitle"><p>Explore Pokémon Trading Card Game cards</p></div>
-        </div>
+      <Navbar />
+      
+      <div className="pokemon-stats-content">
         <div className="search-bar-container">
           <input
             type="text"
@@ -133,116 +132,116 @@ const PokemonStatsPage = () => {
             className="search-input"
           />
         </div>
-      </div>
-      
-      {loading ? (
-        <div className="loading">Loading Pokémon cards...</div>
-      ) : selectedPokemon ? (
-        <div className="pokemon-detail-container">
-          <div className="image-container">
-            <img src={selectedPokemon.images.large} alt={selectedPokemon.name} className="pokemon-image" />
-            <div className="card-info">
-              <h2>{selectedPokemon.name}</h2>
-              <p><strong>Set:</strong> {selectedPokemon.set.name}</p>
-              <p><strong>Rarity:</strong> {selectedPokemon.rarity}</p>
-              <p><strong>Card #:</strong> {selectedPokemon.number}/{selectedPokemon.set.printedTotal}</p>
-              {selectedPokemon.flavorText && (
-                <p className="flavor-text">"{selectedPokemon.flavorText}"</p>
-              )}
-            </div>
-          </div>
-          <div className="stats-details-container">
-            <div className="card-stats">
-              <div className="hp-type">
-                <span className="hp">{selectedPokemon.hp} HP</span>
-                <span className="pokemon-type">
-                  {selectedPokemon.types && selectedPokemon.types.map((type, i) => (
-                    <span key={i} className={`type-symbol ${type.toLowerCase()}`}>{type}</span>
-                  ))}
-                </span>
+        
+        {loading ? (
+          <div className="loading">Loading Pokémon cards...</div>
+        ) : selectedPokemon ? (
+          <div className="pokemon-detail-container">
+            <div className="image-container">
+              <img src={selectedPokemon.images.large} alt={selectedPokemon.name} className="pokemon-image" />
+              <div className="card-info">
+                <h2>{selectedPokemon.name}</h2>
+                <p><strong>Set:</strong> {selectedPokemon.set.name}</p>
+                <p><strong>Rarity:</strong> {selectedPokemon.rarity}</p>
+                <p><strong>Card #:</strong> {selectedPokemon.number}/{selectedPokemon.set.printedTotal}</p>
+                {selectedPokemon.flavorText && (
+                  <p className="flavor-text">"{selectedPokemon.flavorText}"</p>
+                )}
               </div>
-              
-              {selectedPokemon.evolvesFrom && (
-                <div className="evolution-info">
-                  <p>Evolves from: {selectedPokemon.evolvesFrom}</p>
+            </div>
+            <div className="stats-details-container">
+              <div className="card-stats">
+                <div className="hp-type">
+                  <span className="hp">{selectedPokemon.hp} HP</span>
+                  <span className="pokemon-type">
+                    {selectedPokemon.types && selectedPokemon.types.map((type, i) => (
+                      <span key={i} className={`type-symbol ${type.toLowerCase()}`}>{type}</span>
+                    ))}
+                  </span>
                 </div>
-              )}
-              
-              {selectedPokemon.abilities && selectedPokemon.abilities.map((ability, i) => (
-                <div key={i} className="ability-item">
-                  <div className="ability-header">
-                    <span className="ability-name">{ability.name}</span>
-                    <span className="ability-type">{ability.type}</span>
+                
+                {selectedPokemon.evolvesFrom && (
+                  <div className="evolution-info">
+                    <p>Evolves from: {selectedPokemon.evolvesFrom}</p>
                   </div>
-                  <p className="ability-text">{ability.text}</p>
-                </div>
-              ))}
-              
-              {selectedPokemon.attacks && selectedPokemon.attacks.map((attack, i) => 
-                renderAttack(attack, i)
-              )}
-              
-              {renderWeaknessResistance()}
+                )}
+                
+                {selectedPokemon.abilities && selectedPokemon.abilities.map((ability, i) => (
+                  <div key={i} className="ability-item">
+                    <div className="ability-header">
+                      <span className="ability-name">{ability.name}</span>
+                      <span className="ability-type">{ability.type}</span>
+                    </div>
+                    <p className="ability-text">{ability.text}</p>
+                  </div>
+                ))}
+                
+                {selectedPokemon.attacks && selectedPokemon.attacks.map((attack, i) => 
+                  renderAttack(attack, i)
+                )}
+                
+                {renderWeaknessResistance()}
+              </div>
             </div>
           </div>
-        </div>
-      ) : searchTerm ? (
-        <div className="search-results-container">
-          <h3>Search Results</h3>
-          {filteredPokemon.length > 0 ? (
-            <div className="pokemon-grid">
-              {filteredPokemon.map((poke) => (
+        ) : searchTerm ? (
+          <div className="search-results-container">
+            <h3>Search Results</h3>
+            {filteredPokemon.length > 0 ? (
+              <div className="pokemon-grid">
+                {filteredPokemon.map((poke) => (
+                  <div 
+                    key={poke.id} 
+                    className="pokemon-card"
+                    onClick={() => handlePokemonSelect(poke)}
+                  >
+                    <img src={poke.images.small} alt={poke.name} className="grid-image" />
+                    <p>{poke.name}</p>
+                    <p className="card-set">{poke.set.name}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="no-results">
+                No Pokémon found matching "{searchTerm}"
+                <div className="carousel-container">
+                  <h3>Featured Pokémon Cards</h3>
+                  <div className="carousel">
+                    {carouselPokemon.map((poke) => (
+                      <div 
+                        key={poke.id} 
+                        className="carousel-card"
+                        onClick={() => handleCarouselSelect(poke)}
+                      >
+                        <img src={poke.images.small} alt={poke.name} className="carousel-image" />
+                        <p>{poke.name}</p>
+                        <p className="card-set">{poke.set.name}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="carousel-container">
+            <h3>Featured Pokémon Cards</h3>
+            <div className="carousel">
+              {carouselPokemon.map((poke) => (
                 <div 
                   key={poke.id} 
-                  className="pokemon-card"
-                  onClick={() => handlePokemonSelect(poke)}
+                  className="carousel-card"
+                  onClick={() => handleCarouselSelect(poke)}
                 >
-                  <img src={poke.images.small} alt={poke.name} className="grid-image" />
+                  <img src={poke.images.small} alt={poke.name} className="carousel-image" />
                   <p>{poke.name}</p>
                   <p className="card-set">{poke.set.name}</p>
                 </div>
               ))}
             </div>
-          ) : (
-            <div className="no-results">
-              No Pokémon found matching "{searchTerm}"
-              <div className="carousel-container">
-                <h3>Featured Pokémon Cards</h3>
-                <div className="carousel">
-                  {carouselPokemon.map((poke) => (
-                    <div 
-                      key={poke.id} 
-                      className="carousel-card"
-                      onClick={() => handleCarouselSelect(poke)}
-                    >
-                      <img src={poke.images.small} alt={poke.name} className="carousel-image" />
-                      <p>{poke.name}</p>
-                      <p className="card-set">{poke.set.name}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="carousel-container">
-          <h3>Featured Pokémon Cards</h3>
-          <div className="carousel">
-            {carouselPokemon.map((poke) => (
-              <div 
-                key={poke.id} 
-                className="carousel-card"
-                onClick={() => handleCarouselSelect(poke)}
-              >
-                <img src={poke.images.small} alt={poke.name} className="carousel-image" />
-                <p>{poke.name}</p>
-                <p className="card-set">{poke.set.name}</p>
-              </div>
-            ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

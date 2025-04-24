@@ -142,3 +142,14 @@
     background-color: #f44336;
     color: white;
 }
+
+.trading-page-container {
+    font-family: 'Raleway', sans-serif;
+}
+
+.trading-content {
+    display: flex;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}

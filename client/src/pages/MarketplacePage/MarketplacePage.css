@@ -2,18 +2,13 @@
 .marketplace-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 0 0 20px 0;
   font-family: Arial, sans-serif;
 }
 
 /* Header Styles */
 .marketplace-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 30px;
-  padding-bottom: 15px;
-  border-bottom: 1px solid #eee;
+  display: none;
 }
 
 .logo {
@@ -59,19 +54,7 @@
 }
 
 .sell-card-container {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 20px;
-}
-
-.sell-card-btn {
-  padding: 10px 20px;
-  background-color: #c71c1c;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-weight: bold;
-  cursor: pointer;
+  display: none;
 }
 
 /* Section Styles */
@@ -228,4 +211,19 @@
   font-size: 12px;
   color: #666;
   margin: 0;
+}
+
+/* Add this to your MarketplacePage.css */
+.marketplace-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 10px 0;
+}
+
+/* Adjust this to override any styles from Components.css */
+.marketplace-controls .search-container {
+  flex: 1;
+  max-width: 400px;
 }

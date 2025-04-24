@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import './MarketplacePage.css';
 import SearchBar from '../../components/SearchBar';
 import Card from '../../components/Card';
+import Navbar from '../../components/Navbar';
+
 
 const MarketplacePage = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -87,25 +89,13 @@ const MarketplacePage = () => {
 
   return (
     <div className="marketplace-container">
-      <header className="marketplace-header">
-        <div className="logo-container">
-          <Link to="/" className="logo">PokeJackets</Link>
-        </div>
-        
-        <SearchBar 
-          placeholder="Search for Cards" 
-          onSearch={handleSearch} 
-        />
-        
-        <div className="user-actions">
-          <span className="balance">${balance.toFixed(0)}</span>
-          <button className="sign-in-btn">Sign In</button>
-          <button className="register-btn">Register</button>
-        </div>
-      </header>
-
+      <Navbar balance={balance} />
       <main className="marketplace-main">
-        <div className="sell-card-container">
+        <div className="marketplace-controls">
+          <SearchBar 
+            placeholder="Search for Cards" 
+            onSearch={handleSearch} 
+          />
           <button className="sell-card-btn">Sell a Card</button>
         </div>
         
