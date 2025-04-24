@@ -15,19 +15,21 @@ const TradingPage = () => {
     const [outgoingRequests, setOutgoingRequests] = useState([]);
     const navigate = useNavigate();
 
+
+
     const fetchAllData = async () => {
         const token = localStorage.getItem('token');
         try {
-            const userRes = await fetch('http://localhost:8000/api/user/', {
+
+            const userRes = await fetch('http://localhost:8000/api/user/profile/', {
                 headers: { 'Authorization': `Token ${token}` }
             });
-
             if (userRes.ok) {
                 const userData = await userRes.json();
                 setFriendID(userData.id);
             }
 
-            // Fetch all friend data in parallel
+
             const [friendsRes, pendingRes] = await Promise.all([
                 fetch('http://localhost:8000/api/friends/list/', {
                     headers: { 'Authorization': `Token ${token}` }
@@ -48,13 +50,47 @@ const TradingPage = () => {
                 setOutgoingRequests(pendingData.outgoing_requests);
             }
         } catch (err) {
-            console.error('Error fetching data', err);
+            console.error('Error fetching data:', err);
         }
     };
 
     useEffect(() => {
         fetchAllData();
     }, []);
+
+    const sendFriendRequest = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch('http://localhost:8000/api/friends/request/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Token ${token}`
+                },
+                body: JSON.stringify({ user_id: friendIdInput })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setAddFriendMessage("Invite sent! Refresh page to see updates.");
+                setFriendIdInput('');
+
+                setTimeout(() => {
+                    setShowModal(false);
+                    fetchAllData();
+                    setAddFriendMessage('');
+                }, 3000);
+            } else {
+                // Error case from server
+                setAddFriendMessage(data.error || "Failed to send friend request");
+            }
+        } catch (error) {
+            // Network error case
+            setAddFriendMessage('Network error. Please try again.');
+            console.error('Error sending friend request:', error);
+        }
+    };
 
     const handleAccept = async (requestId) => {
         try {
@@ -69,10 +105,12 @@ const TradingPage = () => {
             });
 
             if (response.ok) {
-                fetchAllData(); // Refresh all data
+                fetchAllData();
+            } else {
+                console.error('Failed to accept request:', await response.json());
             }
         } catch (error) {
-            console.error('Error accepting request', error);
+            console.error('Error accepting request:', error);
         }
     };
 
@@ -90,9 +128,11 @@ const TradingPage = () => {
 
             if (response.ok) {
                 setIncomingRequests(incomingRequests.filter(req => req.id !== requestId));
+            } else {
+                console.error('Failed to decline request:', await response.json());
             }
         } catch (error) {
-            console.error('Error declining request', error);
+            console.error('Error declining request:', error);
         }
     };
 
@@ -105,43 +145,16 @@ const TradingPage = () => {
                     'Content-Type': 'application/json',
                     'Authorization': `Token ${token}`
                 },
-                body: JSON.stringify({ action: 'decline' }) // Same as decline for outgoing
+                body: JSON.stringify({ action: 'decline' })
             });
 
             if (response.ok) {
                 setOutgoingRequests(outgoingRequests.filter(req => req.id !== requestId));
-            }
-        } catch (error) {
-            console.error('Error canceling request', error);
-        }
-    };
-
-    const sendFriendRequest = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            const response = await fetch('http://localhost:8000/api/friends/request/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Token ${token}`
-                },
-                body: JSON.stringify({ user_id: friendIdInput })
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                setAddFriendMessage(data.message || "Friend request sent!");
-                setFriendIdInput('');
-                setTimeout(() => {
-                    setShowModal(false);
-                    fetchAllData(); // Refresh data
-                }, 2000);
             } else {
-                setAddFriendMessage(data.error || "Failed to send request");
+                console.error('Failed to cancel request:', await response.json());
             }
         } catch (error) {
-            setAddFriendMessage('Something went wrong. Try again.');
+            console.error('Error canceling request:', error);
         }
     };
 
@@ -293,7 +306,11 @@ const TradingPage = () => {
                                 </button>
                             </div>
                             {addFriendMessage && (
-                                <p className={addFriendMessage.includes('error') ? 'error-message' : 'success-message'}>
+                                <p className={
+                                    addFriendMessage.includes('Invite sent') ?
+                                        'success-message' :
+                                        'error-message'
+                                }>
                                     {addFriendMessage}
                                 </p>
                             )}

@@ -33,4 +33,5 @@ urlpatterns = [
     ),
     path("user/profile/", views.user_profile, name="user_profile"),
     path("user/balance/", views.get_user_balance, name="get_user_balance"),
+    path("user/id/", views.get_user_id, name="user_id"),
 ]

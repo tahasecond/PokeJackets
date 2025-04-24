@@ -25,7 +25,7 @@ urlpatterns = [
     path("api/", include("pokemon.urls")),
     path("api/aigen/", include("aigeneration.urls")),
     path("api/", include("users.urls")),
-    path("", include("trading.urls")),
+    path("api/", include("trading.urls")),
     path("api/marketplace/", include("marketplace.urls")),
 ]
 

@@ -16,12 +16,23 @@ class FriendRequestView(APIView):
     def post(self, request):
         to_user_id = request.data.get("user_id")
 
+        if not to_user_id:
+            return Response(
+                {"success": False, "error": "User ID is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         try:
             to_user = User.objects.get(id=to_user_id)
         except User.DoesNotExist:
             return Response(
                 {"success": False, "error": "User not found"},
                 status=status.HTTP_404_NOT_FOUND,
+            )
+        except ValueError:
+            return Response(
+                {"success": False, "error": "Invalid user ID"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         if request.user == to_user:
@@ -30,7 +41,7 @@ class FriendRequestView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Check if request already exists in any direction
+        # Check if request already exists
         if FriendRequest.objects.filter(
             Q(from_user=request.user, to_user=to_user)
             | Q(from_user=to_user, to_user=request.user)

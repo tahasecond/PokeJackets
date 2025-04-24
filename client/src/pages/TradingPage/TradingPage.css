@@ -263,3 +263,28 @@
     text-align: center;
     padding: 20px 0;
 }
+
+
+.success-message {
+    color: #4CAF50;
+    margin-top: 10px;
+    font-size: 0.9rem;
+    animation: fadeIn 0.5s;
+}
+
+.error-message {
+    color: #F44336;
+    margin-top: 10px;
+    font-size: 0.9rem;
+    animation: fadeIn 0.5s;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}

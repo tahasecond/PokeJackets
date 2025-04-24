@@ -112,3 +112,18 @@ def get_user_balance(request):
     )
 
     return JsonResponse({"balance": float(wallet.balance)})
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_user_id(request):
+    """
+    Returns the current user's ID (for friend system)
+    """
+    return JsonResponse(
+        {
+            "id": request.user.id,
+            "username": request.user.username,
+            "email": request.user.email,
+        }
+    )
