@@ -5,10 +5,9 @@ import SearchBar from '../../components/SearchBar';
 import Card from '../../components/Card';
 import Navbar from '../../components/Navbar';
 
-
 const MarketplacePage = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [balance] = useState(2500);
+  const [balance, setBalance] = useState(2500);
   const [pokemon, setPokemon] = useState([]);
   const [filteredPokemon, setFilteredPokemon] = useState([]);
   const [featuredPokemon, setFeaturedPokemon] = useState([]);
@@ -16,6 +15,31 @@ const MarketplacePage = () => {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const cardsPerPage = 5;
+
+  // Fetch user balance on component mount
+  useEffect(() => {
+    const fetchUserBalance = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        
+        const response = await fetch('http://127.0.0.1:8000/api/user/balance/', {
+          headers: {
+            'Authorization': `Token ${token}`
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setBalance(data.balance);
+        }
+      } catch (error) {
+        console.error('Error fetching user balance:', error);
+      }
+    };
+    
+    fetchUserBalance();
+  }, []);
 
   useEffect(() => {
     fetch('http://127.0.0.1:8000/api/pokemon/')
@@ -49,6 +73,11 @@ const MarketplacePage = () => {
     );
     
     setFilteredPokemon(filtered);
+  };
+
+  // Handle successful card purchase
+  const handleCardPurchased = (newBalance) => {
+    setBalance(newBalance);
   };
 
   // Get current cards for pagination
@@ -116,6 +145,7 @@ const MarketplacePage = () => {
                     imageSrc={card.images.small}
                     rarity={card.rarity}
                     type={card.types ? card.types[0] : "Normal"}
+                    onCardPurchased={handleCardPurchased}
                   />
                 ))}
               </div>
@@ -151,6 +181,7 @@ const MarketplacePage = () => {
                       imageSrc={card.images.small}
                       rarity={card.rarity}
                       type={card.types ? card.types[0] : "Normal"}
+                      onCardPurchased={handleCardPurchased}
                     />
                   ))}
                 </div>
@@ -173,6 +204,7 @@ const MarketplacePage = () => {
                   bodyText="Free daily card!"
                   imageSrc={pokemon[0]?.images.small}
                   id={pokemon[0]?.id}
+                  onCardPurchased={handleCardPurchased}
                 />
               </div>
             </section>

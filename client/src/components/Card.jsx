@@ -1,12 +1,58 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Components.css';
 
-const Card = ({ id, title, price, bodyText, imageSrc, rarity, type }) => {
+const Card = ({ id, title, price, bodyText, imageSrc, rarity, type, onCardPurchased }) => {
   const navigate = useNavigate();
+  const [purchasing, setPurchasing] = useState(false);
   
   const handleCardClick = () => {
     navigate(`/pokemon/${id}`);
+  };
+  
+  const handlePurchase = async (e) => {
+    e.stopPropagation(); // Prevent navigating to the card details page
+    
+    if (purchasing) return;
+    setPurchasing(true);
+    
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('You must be logged in to purchase cards');
+        setPurchasing(false);
+        return;
+      }
+      
+      const response = await fetch('http://127.0.0.1:8000/api/purchase/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Token ${token}`
+        },
+        body: JSON.stringify({
+          card_id: id,
+          price: price
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        alert(`Purchase failed: ${data.message || 'Unknown error'}`);
+      } else {
+        alert(data.message || 'Card purchased successfully!');
+        
+        // Update parent components if needed (e.g., to update balance)
+        if (onCardPurchased) {
+          onCardPurchased(data.balance);
+        }
+      }
+    } catch (err) {
+      alert(`Purchase failed: ${err.message || 'Unknown error'}`);
+    } finally {
+      setPurchasing(false);
+    }
   };
   
   return (
@@ -28,14 +74,13 @@ const Card = ({ id, title, price, bodyText, imageSrc, rarity, type }) => {
           </p>
         )}
       </div>
-      {rarity && (
+      {rarity && price > 0 && (
         <button 
           className="buy-now-btn"
-          onClick={(e) => {
-            e.stopPropagation(); // Stop the event from bubbling up to parent
-          }}
+          onClick={handlePurchase}
+          disabled={purchasing}
         >
-          Buy Now
+          {purchasing ? 'Buying...' : 'Buy Now'}
         </button>
       )}
     </div>

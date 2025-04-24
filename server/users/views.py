@@ -5,6 +5,9 @@ from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from marketplace.models import User_wallet
 
 class RegistrationView(APIView):
     def post(self, request):
@@ -83,3 +86,30 @@ class LoginView(APIView):
 
 # class ResetPassword(APIView):
 # will set up later w/ a password reset email
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def user_profile(request):
+    """
+    Endpoint to get the current user's profile information.
+    """
+    user = request.user
+    
+    return JsonResponse({
+        'id': user.id,
+        'username': user.username,
+        'email': user.email
+    })
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_user_balance(request):
+    """
+    Endpoint to get the current user's balance.
+    """
+    user = request.user
+    wallet, created = User_wallet.objects.get_or_create(user=user, defaults={'balance': 2500})
+    
+    return JsonResponse({
+        'balance': float(wallet.balance)
+    })

@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import './Components.css';
 
-const Navbar = ({ balance = 2500 }) => {
+const Navbar = ({ initialBalance }) => {
   const location = useLocation();
   const [username, setUsername] = useState("Trainer");
+  const [balance, setBalance] = useState(initialBalance || 2500);
   
   useEffect(() => {
     // Get user information from localStorage or API
@@ -13,13 +14,16 @@ const Navbar = ({ balance = 2500 }) => {
     
     if (storedUsername) {
       setUsername(storedUsername);
-    } else {
-      // If no username in localStorage, fetch from API if token exists
-      if (token) {
+    }
+    
+    // Always fetch the latest balance when Navbar is mounted
+    if (token) {
+      fetchUserBalance(token);
+      if (!storedUsername) {
         fetchUserProfile(token);
       }
     }
-  }, []);
+  }, [location.pathname]); // Re-fetch when route changes
   
   const fetchUserProfile = (token) => {
     fetch('http://127.0.0.1:8000/api/user/profile/', {
@@ -37,6 +41,23 @@ const Navbar = ({ balance = 2500 }) => {
     })
     .catch(error => {
       console.error('Error fetching user profile:', error);
+    });
+  };
+  
+  const fetchUserBalance = (token) => {
+    fetch('http://127.0.0.1:8000/api/user/balance/', {
+      headers: {
+        'Authorization': `Token ${token}`
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.balance !== undefined) {
+        setBalance(data.balance);
+      }
+    })
+    .catch(error => {
+      console.error('Error fetching user balance:', error);
     });
   };
   
