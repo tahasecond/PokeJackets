@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Components.css';
+import { useBalance } from '../context/BalanceContext';
 
 const Card = ({ id, title, price, bodyText, imageSrc, rarity, type, onCardPurchased }) => {
   const navigate = useNavigate();
   const [purchasing, setPurchasing] = useState(false);
+  const { updateBalance } = useBalance();
   
   const handleCardClick = () => {
     navigate(`/pokemon/${id}`);
@@ -43,9 +45,9 @@ const Card = ({ id, title, price, bodyText, imageSrc, rarity, type, onCardPurcha
       } else {
         alert(data.message || 'Card purchased successfully!');
         
-        // Update parent components if needed (e.g., to update balance)
-        if (onCardPurchased) {
-          onCardPurchased(data.balance);
+        // Update the global balance
+        if (data.balance !== undefined) {
+          updateBalance(data.balance);
         }
       }
     } catch (err) {

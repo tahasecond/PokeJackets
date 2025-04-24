@@ -1,9 +1,8 @@
 /* MarketplacePage Styles */
 .marketplace-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 0 20px 0;
-  font-family: Arial, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Header Styles */
@@ -50,7 +49,9 @@
 
 /* Main Content Styles */
 .marketplace-main {
-  position: relative;
+  flex: 1;
+  padding: 1.5rem;
+  background-color: #f9f9f9;
 }
 
 .sell-card-container {
@@ -59,209 +60,271 @@
 
 /* Section Styles */
 .section-title {
+  margin: 0 0 1.5rem 0;
   font-size: 1.5rem;
-  margin-bottom: 20px;
+  color: #333;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #eee;
 }
 
 /* Featured Section */
 .featured-section {
-  margin-bottom: 40px;
+  margin-bottom: 3rem;
 }
 
 .featured-cards {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
-  background-color: #f0f0f0;
-  padding: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.5rem;
 }
 
 /* Browse Section */
 .browse-section {
-  margin-bottom: 40px;
+  margin-bottom: 3rem;
 }
 
 .browse-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
 .filters {
   display: flex;
-  gap: 10px;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .filter-btn {
-  padding: 5px 10px;
-  background-color: transparent;
+  padding: 0.5rem 1rem;
+  background-color: white;
   border: 1px solid #ddd;
-  border-radius: 4px;
+  border-radius: 20px;
   cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.2s;
 }
 
-.new-btn {
-  background-color: #333;
-  color: white;
+.filter-btn:hover {
+  background-color: #f5f5f5;
+}
+
+.filter-btn.new-btn {
+  background-color: #e3f2fd;
+  border-color: #bbdefb;
+  color: #1976d2;
 }
 
 .browse-cards-container {
   display: flex;
   align-items: center;
-  position: relative;
+  gap: 1rem;
 }
 
 .browse-cards {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 15px;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.5rem;
   width: 100%;
-  overflow-x: hidden;
 }
 
 .nav-btn {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: white;
+  border: 1px solid #ddd;
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  padding: 0 10px;
-  z-index: 2;
+  transition: all 0.2s;
 }
 
-.prev-btn {
-  position: absolute;
-  left: -30px;
+.nav-btn:hover:not(:disabled) {
+  background-color: #f5f5f5;
 }
 
-.next-btn {
-  position: absolute;
-  right: -30px;
+.nav-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* Daily Card Section */
 .daily-card-section {
-  margin-bottom: 30px;
+  margin-bottom: 3rem;
+  background-color: #fff3e0;
+  padding: 1.5rem;
+  border-radius: 8px;
 }
 
 .daily-card-container {
-  background-color: #f0f0f0;
-  padding: 20px;
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .daily-card-title {
-  font-size: 1.3rem;
-  margin-bottom: 20px;
+  font-size: 1.25rem;
+  margin-bottom: 1.5rem;
+  color: #e65100;
 }
 
 /* Loading State */
 .loading {
   text-align: center;
-  padding: 50px;
-  font-size: 18px;
+  padding: 3rem;
+  color: #666;
+  font-weight: 500;
 }
 
 /* Carousel Section */
 .carousel-section {
-  margin: 40px 0;
+  margin-bottom: 3rem;
 }
 
 .cards-carousel {
   display: flex;
   overflow-x: auto;
-  gap: 15px;
-  padding: 20px 0;
-  scroll-behavior: smooth;
+  gap: 1rem;
+  padding: 1rem 0;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
 }
 
 .carousel-item {
-  flex: 0 0 auto;
-  width: 150px;
-  border-radius: 10px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  flex: 0 0 150px;
   background-color: white;
-  transition: transform 0.3s;
-  cursor: pointer;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  transition: transform 0.2s;
 }
 
 .carousel-item:hover {
-  transform: scale(1.05);
-  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+  transform: translateY(-5px);
 }
 
 .carousel-image {
   width: 100%;
-  height: auto;
-  border-radius: 10px 10px 0 0;
-  object-fit: cover;
+  aspect-ratio: 1/1;
+  object-fit: contain;
 }
 
 .carousel-info {
-  padding: 10px;
+  padding: 0.75rem;
 }
 
 .carousel-name {
   font-weight: bold;
-  margin: 0 0 5px 0;
-  font-size: 14px;
+  font-size: 0.875rem;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .carousel-rarity {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: #666;
-  margin: 0;
+  margin: 0.5rem 0 0 0;
 }
 
 /* Add this to your MarketplacePage.css */
 .marketplace-controls {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  padding: 10px 0;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
 }
 
 /* Adjust this to override any styles from Components.css */
 .marketplace-controls .search-container {
   flex: 1;
-  max-width: 400px;
+  min-width: 200px;
 }
 
-
 .user-listings-section {
-  margin-bottom: 40px;
+  margin-bottom: 3rem;
 }
 
 .user-listings-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 20px;
-  margin-top: 20px;
+  gap: 1.5rem;
 }
 
 .empty-listings {
   text-align: center;
-  padding: 30px;
+  padding: 2rem;
   background-color: white;
   border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
   color: #666;
 }
 
 .sell-card-btn {
-  display: inline-block;
-  padding: 8px 16px;
+  padding: 0.75rem 1.5rem;
   background-color: #ff9800;
   color: white;
-  text-decoration: none;
+  border: none;
   border-radius: 4px;
+  cursor: pointer;
   font-weight: bold;
   transition: background-color 0.2s;
-  border: none;
-  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
 }
 
 .sell-card-btn:hover {
   background-color: #f57c00;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .marketplace-main {
+    padding: 1rem;
+  }
+  
+  .marketplace-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .browse-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .featured-cards,
+  .browse-cards,
+  .user-listings-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem;
+  }
+  
+  .nav-btn {
+    display: none;
+  }
+  
+  .browse-cards-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 1rem;
+  }
+  
+  .browse-cards {
+    display: flex;
+    gap: 1rem;
+  }
+  
+  .browse-cards > * {
+    flex: 0 0 150px;
+  }
 }
