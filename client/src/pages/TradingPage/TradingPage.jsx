@@ -150,40 +150,44 @@ const TradingPage = () => {
             <Navbar />
 
             <div className="trading-content">
-                {/* Left Side */}
+                {/* Left Panel - All friend-related components */}
                 <div className="left-panel">
                     <div className="actions">
-                        <button className="add-friend-btn" onClick={() => setShowModal(true)}>Add Friend</button>
+                        <button className="add-friend-btn" onClick={() => setShowModal(true)}>
+                            Add Friend
+                        </button>
 
                         {/* Friends List */}
-                        <div className="friends-list">
-                            <h3>Friends</h3>
+                        <div className="section">
+                            <h3 className="section-title">Friends</h3>
                             {friends.length > 0 ? (
-                                <ul>
+                                <ul className="friends-list">
                                     {friends.map((friend) => (
-                                        <li key={friend.id}>
-                                            {friend.username}
-                                            <span className="friend-email">{friend.email}</span>
+                                        <li key={friend.id} className="friend-item">
+                                            <div className="friend-info">
+                                                <span className="friend-username">{friend.username}</span>
+                                                <span className="friend-email">{friend.email}</span>
+                                            </div>
                                         </li>
                                     ))}
                                 </ul>
                             ) : (
-                                <p>No friends yet</p>
+                                <p className="empty-state">No friends yet</p>
                             )}
                         </div>
 
                         {/* Incoming Friend Requests */}
-                        <div className="friend-requests-list">
-                            <h3>Friend Requests</h3>
+                        <div className="section">
+                            <h3 className="section-title">Friend Requests</h3>
                             {incomingRequests.length > 0 ? (
-                                <ul>
+                                <ul className="friend-requests-list">
                                     {incomingRequests.map((request) => (
                                         <li key={request.id} className="request-item">
                                             <div className="request-info">
                                                 <span className="request-username">{request.from_user.username}</span>
                                                 <span className="request-email">{request.from_user.email}</span>
                                             </div>
-                                            <div className="request-actions">
+                                            <div>
                                                 <button
                                                     className="accept-btn"
                                                     onClick={() => handleAccept(request.id)}
@@ -201,10 +205,37 @@ const TradingPage = () => {
                                     ))}
                                 </ul>
                             ) : (
-                                <p>No pending requests</p>
+                                <p className="empty-state">No pending requests</p>
+                            )}
+                        </div>
+
+                        {/* Outgoing Friend Requests */}
+                        <div className="section">
+                            <h3 className="section-title">Sent Requests</h3>
+                            {outgoingRequests.length > 0 ? (
+                                <ul className="outgoing-requests-list">
+                                    {outgoingRequests.map((request) => (
+                                        <li key={request.id} className="outgoing-item">
+                                            <div className="request-info">
+                                                <span className="request-username">{request.to_user.username}</span>
+                                                <span className="request-email">{request.to_user.email}</span>
+                                            </div>
+                                            <button
+                                                className="cancel-btn"
+                                                onClick={() => handleCancelRequest(request.id)}
+                                            >
+                                                Cancel
+                                            </button>
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <p className="empty-state">No outgoing requests</p>
                             )}
                         </div>
                     </div>
+
+                    {/* Friend ID Section */}
                     <div className="friend-id-section">
                         <button
                             onClick={() => setShowFriendId(!showFriendID)}
@@ -212,7 +243,6 @@ const TradingPage = () => {
                         >
                             {showFriendID ? "Hide Friend ID" : "Show Friend ID"}
                         </button>
-
                         {showFriendID && (
                             <div className="friend-id-box">
                                 <p>{friendID}</p>
@@ -224,40 +254,19 @@ const TradingPage = () => {
                                     }}
                                     className="copy-id-btn"
                                 >
-                                    {copied ? "Copied!" : "Copy Friend ID"}
+                                    {copied ? "Copied!" : "Copy"}
                                 </button>
                             </div>
                         )}
                     </div>
                 </div>
 
-                {/* Right Side */}
+                {/* Right Panel - Trading Area */}
                 <div className="right-panel">
-                    <button className="trade-btn">Trade</button>
-
-                    {/* Outgoing Friend Requests */}
-                    <div className="outgoing-requests-list">
-                        <h3>Outgoing Requests</h3>
-                        {outgoingRequests.length > 0 ? (
-                            <ul>
-                                {outgoingRequests.map((request) => (
-                                    <li key={request.id} className="outgoing-item">
-                                        <div className="request-info">
-                                            <span className="request-username">{request.to_user.username}</span>
-                                            <span className="request-email">{request.to_user.email}</span>
-                                        </div>
-                                        <button
-                                            className="cancel-btn"
-                                            onClick={() => handleCancelRequest(request.id)}
-                                        >
-                                            Cancel
-                                        </button>
-                                    </li>
-                                ))}
-                            </ul>
-                        ) : (
-                            <p>No outgoing requests</p>
-                        )}
+                    <button className="trade-btn">Start New Trade</button>
+                    {/* Future trading interface will go here */}
+                    <div className="empty-state">
+                        Select a friend to start trading
                     </div>
                 </div>
 
@@ -273,11 +282,15 @@ const TradingPage = () => {
                                 placeholder="Enter Friend ID"
                             />
                             <div className="modal-buttons">
-                                <button onClick={sendFriendRequest}>Send</button>
                                 <button onClick={() => {
                                     setShowModal(false);
                                     setAddFriendMessage('');
-                                }}>Cancel</button>
+                                }}>
+                                    Cancel
+                                </button>
+                                <button onClick={sendFriendRequest}>
+                                    Send Request
+                                </button>
                             </div>
                             {addFriendMessage && (
                                 <p className={addFriendMessage.includes('error') ? 'error-message' : 'success-message'}>
@@ -291,5 +304,6 @@ const TradingPage = () => {
         </div>
     );
 };
+
 
 export default TradingPage;
