@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useBalance } from '../context/BalanceContext';
 import './Components.css';
 
-const Navbar = ({ balance }) => {
+const Navbar = () => {
   const location = useLocation();
   const [username, setUsername] = useState("Trainer");
-  const [currentBalance, setCurrentBalance] = useState(balance || 2500);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { balance, loading } = useBalance();
   
   useEffect(() => {
     // Get user information from localStorage or API
@@ -14,22 +16,13 @@ const Navbar = ({ balance }) => {
     
     if (storedUsername) {
       setUsername(storedUsername);
+    } else if (token) {
+      fetchUserProfile(token);
     }
     
-    // Always fetch the latest balance when Navbar is mounted
-    if (token) {
-      fetchUserBalance(token);
-      if (!storedUsername) {
-        fetchUserProfile(token);
-      }
-    }
-  }, [location.pathname]); // Re-fetch when route changes
-  
-  useEffect(() => {
-    if (balance !== undefined) {
-      setCurrentBalance(balance);
-    }
-  }, [balance]);
+    // Close mobile menu when route changes
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
   
   const fetchUserProfile = (token) => {
     fetch('http://127.0.0.1:8000/api/user/profile/', {
@@ -41,29 +34,11 @@ const Navbar = ({ balance }) => {
     .then(data => {
       if (data.username) {
         setUsername(data.username);
-        // Store for future use
         localStorage.setItem('username', data.username);
       }
     })
     .catch(error => {
       console.error('Error fetching user profile:', error);
-    });
-  };
-  
-  const fetchUserBalance = (token) => {
-    fetch('http://127.0.0.1:8000/api/user/balance/', {
-      headers: {
-        'Authorization': `Token ${token}`
-      }
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.balance !== undefined) {
-        setCurrentBalance(data.balance);
-      }
-    })
-    .catch(error => {
-      console.error('Error fetching user balance:', error);
     });
   };
   
@@ -74,11 +49,15 @@ const Navbar = ({ balance }) => {
   const handleLogout = () => {
     try {
       localStorage.removeItem("token");
-      localStorage.removeItem("username"); // Also remove username
+      localStorage.removeItem("username");
       window.location.href = '/';
     } catch (error) {
       console.error("Logout error:", error);
     }
+  };
+
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
   };
 
   return (
@@ -90,7 +69,11 @@ const Navbar = ({ balance }) => {
         </Link>
       </div>
       
-      <nav className="navigation">
+      <button className="mobile-menu-toggle" onClick={toggleMobileMenu} aria-label="Toggle menu">
+        <span className="burger-icon"></span>
+      </button>
+      
+      <nav className={`navigation ${mobileMenuOpen ? 'mobile-open' : ''}`}>
         <Link 
           to="/marketplace" 
           className={`nav-button ${location.pathname === '/marketplace' ? 'active' : ''}`}
@@ -126,7 +109,11 @@ const Navbar = ({ balance }) => {
       <div className="user-info">
         <div className="balance-display">
           <span className="currency-symbol">P</span>
-          <span className="balance-amount">{currentBalance.toLocaleString()}</span>
+          {loading ? (
+            <span className="balance-loading">...</span>
+          ) : (
+            <span className="balance-amount">{balance.toLocaleString()}</span>
+          )}
         </div>
         <div className="user-profile">
           <span className="username">{username}</span>

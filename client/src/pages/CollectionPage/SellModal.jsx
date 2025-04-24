@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import './SellModal.css';
+import { useBalance } from '../../context/BalanceContext';
 
 const SellModal = ({ card, onClose, onListingCreated }) => {
   const [price, setPrice] = useState('');
   const [notes, setNotes] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const { fetchBalance } = useBalance();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -45,6 +47,10 @@ const SellModal = ({ card, onClose, onListingCreated }) => {
       }
       
       alert('Your card has been listed for sale in the marketplace!');
+      
+      // Refresh the balance in case there was a listing fee
+      fetchBalance();
+      
       onListingCreated();
       
     } catch (err) {

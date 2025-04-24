@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './ListingCard.css';
+import { useBalance } from '../../context/BalanceContext';
 
 const ListingCard = ({ listing, onPurchase }) => {
   const navigate = useNavigate();
   const [cardDetails, setCardDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState(false);
+  const { updateBalance } = useBalance();
 
   useEffect(() => {
     const fetchCardDetails = async () => {
@@ -41,7 +43,17 @@ const ListingCard = ({ listing, onPurchase }) => {
     setPurchasing(true);
     
     try {
-      await onPurchase(listing.id);
+      const response = await onPurchase(listing.id);
+      if (!response.ok) {
+        alert(`Purchase failed: ${response.message || 'Unknown error'}`);
+      } else {
+        alert(response.message || 'Purchase successful!');
+        
+        // Update the global balance
+        if (response.balance !== undefined) {
+          updateBalance(response.balance);
+        }
+      }
     } finally {
       setPurchasing(false);
     }

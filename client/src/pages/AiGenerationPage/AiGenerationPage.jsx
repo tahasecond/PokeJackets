@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import './AiGenerationPage.css';
 import Navbar from '../../components/Navbar';
+import { useBalance } from '../../context/BalanceContext';
 
 const AiGenerationPage = () => {
   console.log("Component rendering start");
 
+  const { updateBalance } = useBalance();
   const [balance] = useState(2500);
   console.log("State initialized");
   const [pokemonName, setPokemonName] = useState('');
@@ -105,13 +107,12 @@ const AiGenerationPage = () => {
         uniqueId: data.uniqueId
       });
       
-      // Update the balance if provided
+      // Update the global balance
       if (data.newBalance !== undefined) {
-        setBalance(data.newBalance);
+        updateBalance(data.newBalance);
       }
       
       setIsGenerating(false);
-      // Reload recent cards after successful generation
       loadRecentCards();
     })
     .catch(error => {

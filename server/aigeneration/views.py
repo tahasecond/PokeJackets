@@ -81,13 +81,19 @@ def generate_pokemon(request):
         # Save image to disk
         img_path = save_image(image_data, name)
         
+        # Generate ability and attack information once
+        ability_name = generate_ability_name(name, primary_type)
+        ability_text = generate_ability_text(name, primary_type, description)
+        attack_name = generate_attack_name(name, primary_type)
+        attack_text = generate_attack_text(name, primary_type, attack)
+        
         # Create database record and charge user in a transaction
         with transaction.atomic():
             # Deduct the cost from user's wallet
             wallet.balance -= GENERATION_COST
             wallet.save()
             
-            # Create the card
+            # Create the card with ability and attack information
             card = GeneratedCard.objects.create(
                 name=name,
                 description=description,
@@ -98,7 +104,11 @@ def generate_pokemon(request):
                 hp=hp,
                 attack=attack,
                 defense=defense,
-                image_local_path=img_path
+                image_local_path=img_path,
+                ability_name=ability_name,
+                ability_text=ability_text,
+                attack_name=attack_name,
+                attack_text=attack_text
             )
         
         # Generate a unique ID for the card
@@ -431,9 +441,11 @@ def get_card_details(request, card_id):
                     'message': f'AI card not found with ID {card_id}'
                 }, status=404)
             
-            # Generate an interesting ability based on the card's characteristics
-            ability_name = generate_ability_name(card.name, card.primary_type)
-            ability_text = generate_ability_text(card.name, card.primary_type, card.description)
+            # Use stored ability and attack info if available, otherwise generate
+            ability_name = card.ability_name or generate_ability_name(card.name, card.primary_type)
+            ability_text = card.ability_text or generate_ability_text(card.name, card.primary_type, card.description)
+            attack_name = card.attack_name or generate_attack_name(card.name, card.primary_type)
+            attack_text = card.attack_text or generate_attack_text(card.name, card.primary_type, card.attack)
             
             # Format similar to Pokemon TCG API
             card_data = {
@@ -449,11 +461,11 @@ def get_card_details(request, card_id):
                         'type': 'Ability'
                     }],
                     'attacks': [{
-                        'name': generate_attack_name(card.name, card.primary_type),
+                        'name': attack_name,
                         'cost': [card.primary_type],
                         'convertedEnergyCost': 1,
                         'damage': str(card.attack * 10),
-                        'text': generate_attack_text(card.name, card.primary_type, card.attack)
+                        'text': attack_text
                     }],
                     'weaknesses': [{
                         'type': get_weakness_type(card.primary_type),
