@@ -1,44 +1,144 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import './tradingpage.css';
 import Navbar from '../../components/Navbar';
 
 const TradingPage = () => {
-    const [friendId, setFriendId] = useState('123456');
-    const [friends, setFriends] = useState(['Alice', 'Bob']);
-    const [friendRequests, setFriendRequests] = useState(['Charlie', 'Dana']);
+    const [showFriendID, setShowFriendId] = useState(false);
+    const [friendID, setFriendID] = useState('loading');
+    const [copied, setCopied] = useState(false);
+    const [friends, setFriends] = useState([]);
+    const [incomingRequests, setIncomingRequests] = useState([]);
     const [showModal, setShowModal] = useState(false);
     const [friendIdInput, setFriendIdInput] = useState('');
     const [addFriendMessage, setAddFriendMessage] = useState('');
+    const [outgoingRequests, setOutgoingRequests] = useState([]);
+    const navigate = useNavigate();
 
-    const handleAccept = (name) => {
-        setFriends([...friends, name]);
-        setFriendRequests(friendRequests.filter(req => req !== name));
-    };
-
-    const handleDecline = (name) => {
-        setFriendRequests(friendRequests.filter(req => req !== name));
-    };
-
-    const sendFriendRequest = async () => {
+    const fetchAllData = async () => {
+        const token = localStorage.getItem('token');
         try {
-            const token = localStorage.getItem('token'); // Assuming you store auth token here
+            const userRes = await fetch('http://localhost:8000/api/user/', {
+                headers: { 'Authorization': `Token ${token}` }
+            });
 
-            const response = await fetch('http://localhost:8000/api/send-friend-request/', {
+            if (userRes.ok) {
+                const userData = await userRes.json();
+                setFriendID(userData.id);
+            }
+
+            // Fetch all friend data in parallel
+            const [friendsRes, pendingRes] = await Promise.all([
+                fetch('http://localhost:8000/api/friends/list/', {
+                    headers: { 'Authorization': `Token ${token}` }
+                }),
+                fetch('http://localhost:8000/api/friends/pending/', {
+                    headers: { 'Authorization': `Token ${token}` }
+                })
+            ]);
+
+            if (friendsRes.ok) {
+                const friendsData = await friendsRes.json();
+                setFriends(friendsData.friends);
+            }
+
+            if (pendingRes.ok) {
+                const pendingData = await pendingRes.json();
+                setIncomingRequests(pendingData.incoming_requests);
+                setOutgoingRequests(pendingData.outgoing_requests);
+            }
+        } catch (err) {
+            console.error('Error fetching data', err);
+        }
+    };
+
+    useEffect(() => {
+        fetchAllData();
+    }, []);
+
+    const handleAccept = async (requestId) => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`http://localhost:8000/api/friends/respond/${requestId}/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Token ${token}`
                 },
-                body: JSON.stringify({ friend_id: friendIdInput })
+                body: JSON.stringify({ action: 'accept' })
+            });
+
+            if (response.ok) {
+                fetchAllData(); // Refresh all data
+            }
+        } catch (error) {
+            console.error('Error accepting request', error);
+        }
+    };
+
+    const handleDecline = async (requestId) => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`http://localhost:8000/api/friends/respond/${requestId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Token ${token}`
+                },
+                body: JSON.stringify({ action: 'decline' })
+            });
+
+            if (response.ok) {
+                setIncomingRequests(incomingRequests.filter(req => req.id !== requestId));
+            }
+        } catch (error) {
+            console.error('Error declining request', error);
+        }
+    };
+
+    const handleCancelRequest = async (requestId) => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`http://localhost:8000/api/friends/respond/${requestId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Token ${token}`
+                },
+                body: JSON.stringify({ action: 'decline' }) // Same as decline for outgoing
+            });
+
+            if (response.ok) {
+                setOutgoingRequests(outgoingRequests.filter(req => req.id !== requestId));
+            }
+        } catch (error) {
+            console.error('Error canceling request', error);
+        }
+    };
+
+    const sendFriendRequest = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch('http://localhost:8000/api/friends/request/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Token ${token}`
+                },
+                body: JSON.stringify({ user_id: friendIdInput })
             });
 
             const data = await response.json();
-            setAddFriendMessage(data.message);
 
             if (response.ok) {
+                setAddFriendMessage(data.message || "Friend request sent!");
                 setFriendIdInput('');
-                setTimeout(() => setShowModal(false), 2000); // Close after 2s
+                setTimeout(() => {
+                    setShowModal(false);
+                    fetchAllData(); // Refresh data
+                }, 2000);
+            } else {
+                setAddFriendMessage(data.error || "Failed to send request");
             }
         } catch (error) {
             setAddFriendMessage('Something went wrong. Try again.');
@@ -48,43 +148,126 @@ const TradingPage = () => {
     return (
         <div className="trading-page-container">
             <Navbar />
-            
+
             <div className="trading-content">
-                {/* Left Side */}
+                {/* Left Panel - All friend-related components */}
                 <div className="left-panel">
                     <div className="actions">
-                        <button className="add-friend-btn" onClick={() => setShowModal(true)}>Add Friend</button>
+                        <button className="add-friend-btn" onClick={() => setShowModal(true)}>
+                            Add Friend
+                        </button>
 
                         {/* Friends List */}
-                        <div className="friends-list">
-                            <h3>Friends</h3>
-                            <ul>
-                                {friends.map((friend, index) => (
-                                    <li key={index}>{friend}</li>
-                                ))}
-                            </ul>
+                        <div className="section">
+                            <h3 className="section-title">Friends</h3>
+                            {friends.length > 0 ? (
+                                <ul className="friends-list">
+                                    {friends.map((friend) => (
+                                        <li key={friend.id} className="friend-item">
+                                            <div className="friend-info">
+                                                <span className="friend-username">{friend.username}</span>
+                                                <span className="friend-email">{friend.email}</span>
+                                            </div>
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <p className="empty-state">No friends yet</p>
+                            )}
                         </div>
 
-                        {/* Friend Requests */}
-                        <div className="friend-requests-list">
-                            <h3>Friend Requests</h3>
-                            <ul>
-                                {friendRequests.map((request, index) => (
-                                    <li key={index} className="request-item">
-                                        <span>{request}</span>
-                                        <button className="accept-btn" onClick={() => handleAccept(request)}>Accept</button>
-                                        <button className="decline-btn" onClick={() => handleDecline(request)}>Decline</button>
-                                    </li>
-                                ))}
-                            </ul>
+                        {/* Incoming Friend Requests */}
+                        <div className="section">
+                            <h3 className="section-title">Friend Requests</h3>
+                            {incomingRequests.length > 0 ? (
+                                <ul className="friend-requests-list">
+                                    {incomingRequests.map((request) => (
+                                        <li key={request.id} className="request-item">
+                                            <div className="request-info">
+                                                <span className="request-username">{request.from_user.username}</span>
+                                                <span className="request-email">{request.from_user.email}</span>
+                                            </div>
+                                            <div>
+                                                <button
+                                                    className="accept-btn"
+                                                    onClick={() => handleAccept(request.id)}
+                                                >
+                                                    Accept
+                                                </button>
+                                                <button
+                                                    className="decline-btn"
+                                                    onClick={() => handleDecline(request.id)}
+                                                >
+                                                    Decline
+                                                </button>
+                                            </div>
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <p className="empty-state">No pending requests</p>
+                            )}
+                        </div>
+
+                        {/* Outgoing Friend Requests */}
+                        <div className="section">
+                            <h3 className="section-title">Sent Requests</h3>
+                            {outgoingRequests.length > 0 ? (
+                                <ul className="outgoing-requests-list">
+                                    {outgoingRequests.map((request) => (
+                                        <li key={request.id} className="outgoing-item">
+                                            <div className="request-info">
+                                                <span className="request-username">{request.to_user.username}</span>
+                                                <span className="request-email">{request.to_user.email}</span>
+                                            </div>
+                                            <button
+                                                className="cancel-btn"
+                                                onClick={() => handleCancelRequest(request.id)}
+                                            >
+                                                Cancel
+                                            </button>
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <p className="empty-state">No outgoing requests</p>
+                            )}
                         </div>
                     </div>
-                    <div className="friend-id">Friend ID: {friendId}</div>
+
+                    {/* Friend ID Section */}
+                    <div className="friend-id-section">
+                        <button
+                            onClick={() => setShowFriendId(!showFriendID)}
+                            className="toggle-id-btn"
+                        >
+                            {showFriendID ? "Hide Friend ID" : "Show Friend ID"}
+                        </button>
+                        {showFriendID && (
+                            <div className="friend-id-box">
+                                <p>{friendID}</p>
+                                <button
+                                    onClick={() => {
+                                        navigator.clipboard.writeText(friendID);
+                                        setCopied(true);
+                                        setTimeout(() => setCopied(false), 1500);
+                                    }}
+                                    className="copy-id-btn"
+                                >
+                                    {copied ? "Copied!" : "Copy"}
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
-                {/* Right Side */}
+                {/* Right Panel - Trading Area */}
                 <div className="right-panel">
-                    <button className="trade-btn">Trade</button>
+                    <button className="trade-btn">Start New Trade</button>
+                    {/* Future trading interface will go here */}
+                    <div className="empty-state">
+                        Select a friend to start trading
+                    </div>
                 </div>
 
                 {/* Add Friend Modal */}
@@ -99,10 +282,21 @@ const TradingPage = () => {
                                 placeholder="Enter Friend ID"
                             />
                             <div className="modal-buttons">
-                                <button onClick={sendFriendRequest}>Send</button>
-                                <button onClick={() => setShowModal(false)}>Cancel</button>
+                                <button onClick={() => {
+                                    setShowModal(false);
+                                    setAddFriendMessage('');
+                                }}>
+                                    Cancel
+                                </button>
+                                <button onClick={sendFriendRequest}>
+                                    Send Request
+                                </button>
                             </div>
-                            {addFriendMessage && <p>{addFriendMessage}</p>}
+                            {addFriendMessage && (
+                                <p className={addFriendMessage.includes('error') ? 'error-message' : 'success-message'}>
+                                    {addFriendMessage}
+                                </p>
+                            )}
                         </div>
                     </div>
                 )}
@@ -110,5 +304,6 @@ const TradingPage = () => {
         </div>
     );
 };
+
 
 export default TradingPage;
