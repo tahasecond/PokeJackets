@@ -4,6 +4,7 @@ import PokemonStatsPage from './pages/PokemonStatsPage/PokemonStatsPage';
 import HomePage from './pages/HomePage/HomePage';
 import MarketplacePage from './pages/MarketplacePage/MarketplacePage';
 import AiGenerationPage from './pages/AiGenerationPage/AiGenerationPage';
+import CollectionPage from './pages/CollectionPage/CollectionPage';
 import ErrorBoundary from './components/ErrorBoundary';
 import Register from './pages/Register/Register';
 import Login from './pages/Login/Login';
@@ -39,6 +40,9 @@ function App() {
           />
           <Route path="/trading" 
             element={isAuthenticated() ? <TradingPage /> : <Navigate to="/login" />} 
+          />
+          <Route path="/collection" 
+            element={isAuthenticated() ? <CollectionPage /> : <Navigate to="/login" />} 
           />
         </Routes>
       </Router>
