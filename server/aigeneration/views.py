@@ -5,14 +5,17 @@ import random
 import base64
 from io import BytesIO
 from PIL import Image
-import openai
+import google.generativeai as genai
 from django.http import JsonResponse
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from .models import GeneratedCard
+import requests
+import io
+import tempfile
 
-# Configure OpenAI
-openai.api_key = settings.OPENAI_API_KEY
+# Configure Gemini API
+genai.configure(api_key=settings.GEMINI_API_KEY)
 
 @csrf_exempt
 def generate_pokemon(request):
@@ -36,8 +39,8 @@ def generate_pokemon(request):
         # Generate Pokemon stats
         hp, attack, defense = generate_stats(rarity)
         
-        # Generate image using OpenAI
-        image_data = generate_image_openai(name, description, primary_type, secondary_type, art_style)
+        # Generate image using Gemini
+        image_data = generate_image_with_gemini(name, description, primary_type, secondary_type, art_style)
             
         if not image_data:
             return JsonResponse({'error': 'Failed to generate image'}, status=500)
@@ -113,26 +116,109 @@ def generate_stats(rarity):
     return hp, attack, defense
 
 
-def generate_image_openai(name, description, primary_type, secondary_type, art_style):
-    """Generate Pokemon image using OpenAI DALL-E"""
-    type_description = f"{primary_type} type"
-    if secondary_type:
-        type_description += f" and {secondary_type} type"
-    
-    prompt = f"A Pokemon trading card artwork of {name}, a {type_description} Pokemon. {description} Art style: {art_style}. The image should look like official Pokemon artwork."
-    
+def generate_image_with_gemini(name, description, primary_type, secondary_type, art_style):
+    """Two-step approach: Use Gemini for text, Hugging Face for image"""
     try:
-        response = openai.Image.create(
-            prompt=prompt,
-            n=1,
-            size="512x512",
-            response_format="b64_json"
-        )
+        # Configure Gemini
+        genai.configure(api_key=settings.GEMINI_API_KEY)
         
-        return response['data'][0]['b64_json']
+        # Create prompt for Gemini
+        type_description = f"{primary_type} element"
+        if secondary_type:
+            type_description += f" and {secondary_type} element"
+        
+        prompt_for_gemini = f"""Create a detailed description for a fantasy creature with these characteristics:
+        - Name: {name}
+        - Powers: {type_description}
+        - Description: {description}
+        - Art Style: {art_style}
+        
+        Format your response as a detailed prompt for an image generator. Focus only on visual attributes.
+        Make the description very detailed and creative, approximately 100 words.
+        """
+        
+        # Generate detailed description with Gemini
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        response = model.generate_content(prompt_for_gemini)
+        
+        # Extract the detailed description
+        detailed_prompt = response.text
+        print(f"Generated prompt: {detailed_prompt}")
+        
+        # Use Hugging Face for actual image generation
+        image_data = generate_with_huggingface(detailed_prompt)
+        
+        if image_data:
+            return image_data
+        else:
+            print("Hugging Face image generation failed, using placeholder")
+            return generate_placeholder_image(name, primary_type)
+        
     except Exception as e:
-        print(f"OpenAI image generation error: {e}")
+        print(f"Gemini generation error: {e}")
         return generate_placeholder_image(name, primary_type)
+
+
+def generate_with_huggingface(prompt):
+    """Generate image using Hugging Face's free API"""
+    try:
+        if not settings.HUGGINGFACE_API_KEY:
+            print("No Hugging Face API key provided")
+            return None
+            
+        # Updated URL with the correct model path
+        API_URL = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0"
+        
+        headers = {
+            "Authorization": f"Bearer {settings.HUGGINGFACE_API_KEY}"
+        }
+        
+        payload = {
+            "inputs": prompt,
+        }
+        
+        print("Sending request to Hugging Face API...")
+        response = requests.post(API_URL, headers=headers, json=payload)
+        
+        if response.status_code == 200:
+            # The response directly contains the image bytes
+            print("Hugging Face image generated successfully")
+            image_bytes = response.content
+            base64_image = base64.b64encode(image_bytes).decode('utf-8')
+            return base64_image
+        else:
+            print(f"Hugging Face API error: {response.status_code}")
+            print(response.text)
+            return None
+            
+    except Exception as e:
+        print(f"Hugging Face API error: {e}")
+        return None
+
+
+def get_color_for_type(primary_type):
+    """Convert Pokemon type to color description"""
+    type_colors = {
+        'Fire': 'red and orange',
+        'Water': 'blue',
+        'Grass': 'green',
+        'Electric': 'yellow',
+        'Psychic': 'purple',
+        'Fighting': 'brown',
+        'Rock': 'gray',
+        'Ground': 'brown and tan',
+        'Flying': 'white and blue',
+        'Bug': 'green and brown',
+        'Poison': 'purple',
+        'Normal': 'beige',
+        'Ghost': 'purple and gray',
+        'Dark': 'black and gray',
+        'Steel': 'silver',
+        'Fairy': 'pink',
+        'Dragon': 'blue and red',
+        'Ice': 'light blue'
+    }
+    return type_colors.get(primary_type, 'colorful')
 
 
 def generate_placeholder_image(name, primary_type):
