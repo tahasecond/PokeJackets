@@ -2,18 +2,26 @@ import React, { useState } from 'react';
 import './Components.css';
 
 const SearchBar = ({ placeholder = 'Search...', onSearch }) => {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [typingTimeout, setTypingTimeout] = useState(null);
 
-  const handleSearchChange = (e) => {
+  const handleInputChange = (e) => {
     const value = e.target.value;
-    setSearchQuery(value);
-    if (onSearch) {
-      onSearch(value);
+    setSearchTerm(value);
+    
+    // Clear previous timeout
+    if (typingTimeout) {
+      clearTimeout(typingTimeout);
     }
+    
+    // Set new timeout for search
+    setTypingTimeout(setTimeout(() => {
+      onSearch(value);
+    }, 500));
   };
 
   const clearSearch = () => {
-    setSearchQuery('');
+    setSearchTerm('');
     if (onSearch) {
       onSearch('');
     }
@@ -24,11 +32,11 @@ const SearchBar = ({ placeholder = 'Search...', onSearch }) => {
       <input
         type="text"
         placeholder={placeholder}
-        value={searchQuery}
-        onChange={handleSearchChange}
+        value={searchTerm}
+        onChange={handleInputChange}
         className="search-input"
       />
-      {searchQuery && (
+      {searchTerm && (
         <button onClick={clearSearch} className="clear-search">×</button>
       )}
     </div>

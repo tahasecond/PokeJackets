@@ -13,24 +13,52 @@ import json
 from decimal import Decimal
 from django.urls import reverse
 from django.shortcuts import redirect
+from django.core.cache import cache
+import hashlib
 
 # Create your views here.
 
 
 def pokemon_list(request):
+    # Get page and page size from query parameters
+    page = request.GET.get('page', '1')
+    page_size = request.GET.get('pageSize', '20')
+    query = request.GET.get('q', '')
+    
+    # Create a cache key based on the request parameters
+    cache_key = f"pokemon_list_{page}_{page_size}_{query}"
+    cache_key = hashlib.md5(cache_key.encode()).hexdigest()
+    
+    # Try to get data from cache first
+    cached_data = cache.get(cache_key)
+    if cached_data:
+        return JsonResponse(cached_data, safe=False)
+    
     url = "https://api.pokemontcg.io/v2/cards"
-    headers = {"X-Api-Key": API_KEY}  # Access API key from settings
-
+    headers = {"X-Api-Key": API_KEY}
+    
+    # Prepare query parameters for the TCG API
+    params = {
+        'page': page,
+        'pageSize': page_size,
+    }
+    
+    # Add search term if provided
+    if query:
+        params['q'] = f'name:*{query}*'
+    
     try:
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=headers, params=params)
         if response.status_code == 200:
-            pokemon_data = response.json()
-            return JsonResponse(pokemon_data, safe=False)
+            # Cache the response for 1 hour (3600 seconds)
+            data = response.json()
+            cache.set(cache_key, data, 3600)
+            return JsonResponse(data, safe=False)
         else:
             return JsonResponse(
-                {"error": "Failed to fetch Pokémon data"}, status=response.status_code
+                {"error": "Failed to fetch Pokémon data"}, 
+                status=response.status_code
             )
-
     except requests.exceptions.RequestException as e:
         return JsonResponse({"error": str(e)}, status=500)
 
@@ -147,24 +175,32 @@ def purchase_card(request):
 # Add a new function to handle both regular and AI cards
 def pokemon_detail(request, card_id):
     """
-    Endpoint to get details for a specific card (API or AI-generated)
+    Get details for a specific Pokemon card by ID
     """
-    if card_id.startswith('ai-gen-'):
-        # Redirect to AI card details endpoint
-        return redirect(f'/api/aigen/cards/{card_id}/')
-    else:
-        # Regular Pokemon TCG API card
-        url = f"https://api.pokemontcg.io/v2/cards/{card_id}"
-        headers = {"X-Api-Key": API_KEY}
-        
-        try:
-            response = requests.get(url, headers=headers)
-            if response.status_code == 200:
-                return JsonResponse(response.json(), safe=False)
-            else:
-                return JsonResponse(
-                    {"error": "Failed to fetch card details"}, 
-                    status=response.status_code
-                )
-        except requests.exceptions.RequestException as e:
-            return JsonResponse({"error": str(e)}, status=500)
+    # Create a cache key for this specific card
+    cache_key = f"pokemon_detail_{card_id}"
+    cache_key = hashlib.md5(cache_key.encode()).hexdigest()
+    
+    # Try to get card data from cache first
+    cached_data = cache.get(cache_key)
+    if cached_data:
+        return JsonResponse(cached_data, safe=False)
+    
+    # If not in cache, fetch from API
+    url = f"https://api.pokemontcg.io/v2/cards/{card_id}"
+    headers = {"X-Api-Key": API_KEY}
+    
+    try:
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            data = response.json()
+            # Cache the response for 1 day (86400 seconds)
+            cache.set(cache_key, data, 86400)
+            return JsonResponse(data, safe=False)
+        else:
+            return JsonResponse(
+                {"error": "Card not found"}, 
+                status=response.status_code
+            )
+    except requests.exceptions.RequestException as e:
+        return JsonResponse({"error": str(e)}, status=500)

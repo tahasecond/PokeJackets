@@ -154,26 +154,6 @@
   cursor: not-allowed;
 }
 
-/* Daily Card Section */
-.daily-card-section {
-  margin-bottom: 3rem;
-  background-color: #fff3e0;
-  padding: 1.5rem;
-  border-radius: 8px;
-}
-
-.daily-card-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.daily-card-title {
-  font-size: 1.25rem;
-  margin-bottom: 1.5rem;
-  color: #e65100;
-}
-
 /* Loading State */
 .loading {
   text-align: center;
@@ -327,4 +307,11 @@
   .browse-cards > * {
     flex: 0 0 150px;
   }
+}
+
+.pagination-info {
+  text-align: center;
+  margin-top: 15px;
+  color: #666;
+  font-size: 0.9rem;
 }

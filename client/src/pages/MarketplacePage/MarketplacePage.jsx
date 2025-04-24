@@ -17,7 +17,9 @@ const MarketplacePage = () => {
   const [loading, setLoading] = useState(true);
   const [listingsLoading, setListingsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const cardsPerPage = 5;
+  const apiPageSize = 20;
 
   // Fetch user balance on component mount
   useEffect(() => {
@@ -68,18 +70,22 @@ const MarketplacePage = () => {
   }, []);
 
   useEffect(() => {
-    fetch('http://127.0.0.1:8000/api/pokemon/')
+    setLoading(true);
+    fetch(`http://127.0.0.1:8000/api/pokemon/?page=1&pageSize=${apiPageSize}${searchQuery ? `&q=${searchQuery}` : ''}`)
       .then((res) => res.json())
       .then((data) => {
         const pokemonData = data.data;
         setPokemon(pokemonData);
         setFilteredPokemon(pokemonData);
         
-        // Select random Pokémon for featured section
+        // Calculate total pages based on total count from API
+        const total = data.totalCount || pokemonData.length;
+        setTotalPages(Math.ceil(total / cardsPerPage));
+        
+        // Select random Pokémon for featured and carousel sections
         const shuffled = [...pokemonData].sort(() => 0.5 - Math.random());
         setFeaturedPokemon(shuffled.slice(0, 4));
         
-        // Select different random Pokémon for carousel
         const carouselShuffle = [...pokemonData].sort(() => 0.5 - Math.random());
         setCarouselPokemon(carouselShuffle.slice(0, 10));
         
@@ -89,16 +95,11 @@ const MarketplacePage = () => {
         console.error('Error fetching Pokémon:', err);
         setLoading(false);
       });
-  }, []);
+  }, [searchQuery]);
 
   const handleSearch = (query) => {
     setSearchQuery(query);
-    
-    const filtered = pokemon.filter((poke) =>
-      poke.name.toLowerCase().includes(query.toLowerCase())
-    );
-    
-    setFilteredPokemon(filtered);
+    setCurrentPage(1); // Reset to first page when searching
   };
 
   // Handle successful card purchase
@@ -123,14 +124,16 @@ const MarketplacePage = () => {
     }
   };
 
-  // Get current cards for pagination
+  // Keep pagination logic client-side for the retrieved data
   const indexOfLastCard = currentPage * cardsPerPage;
   const indexOfFirstCard = indexOfLastCard - cardsPerPage;
   const currentCards = filteredPokemon.slice(indexOfFirstCard, indexOfLastCard);
 
-  // Change page
+  // Next/previous page navigation
   const nextPage = () => {
-    if (currentPage < Math.ceil(filteredPokemon.length / cardsPerPage)) {
+    // If we're at the end of our current data but not at the last page,
+    // we might need to fetch more data (not implementing this for simplicity)
+    if (currentPage < totalPages) {
       setCurrentPage(currentPage + 1);
     }
   };
@@ -284,27 +287,16 @@ const MarketplacePage = () => {
                 <button 
                   className="nav-btn next-btn" 
                   onClick={nextPage}
-                  disabled={currentPage >= Math.ceil(filteredPokemon.length / cardsPerPage)}
+                  disabled={currentPage >= totalPages}
                 >
                   →
                 </button>
               </div>
-            </section>
-            
-            <section className="daily-card-section">
-              <div className="daily-card-container">
-                <h3 className="daily-card-title">Claim your daily card!</h3>
-                <Card 
-                  title={pokemon[0]?.name || "Mystery Card"} 
-                  price={0} 
-                  bodyText="Free daily card!"
-                  imageSrc={pokemon[0]?.images.small}
-                  id={pokemon[0]?.id}
-                  onCardPurchased={handleCardPurchased}
-                />
+              <div className="pagination-info">
+                Page {currentPage} of {totalPages}
               </div>
             </section>
-
+            
             <section className="carousel-section">
               <h2 className="section-title">Popular Cards</h2>
               <div className="cards-carousel">

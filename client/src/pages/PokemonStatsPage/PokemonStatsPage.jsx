@@ -3,82 +3,115 @@ import "./PokemonStatsPage.css"
 import { Link, useParams } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 
-
 const PokemonStatsPage = () => {
   const { id } = useParams();
   const [pokemon, setPokemon] = useState([]);
   const [filteredPokemon, setFilteredPokemon] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [searchLoading, setSearchLoading] = useState(false);
   const [selectedPokemon, setSelectedPokemon] = useState(null);
   const [carouselPokemon, setCarouselPokemon] = useState([]);
+  const [typingTimeout, setTypingTimeout] = useState(null);
 
   useEffect(() => {
     if (id) {
-      setLoading(true);
-      
-      // Determine which API endpoint to use based on the card ID
-      const fetchUrl = id.startsWith('ai-')
-        ? `http://127.0.0.1:8000/api/aigen/cards/${id}/`  // AI-generated card endpoint
-        : `http://127.0.0.1:8000/api/pokemon/`; // Regular Pokemon endpoint
-        
-      fetch(fetchUrl)
-        .then(res => res.json())
-        .then(data => {
-          // For AI cards, the data format is different (it has a 'data' property)
-          if (id.startsWith('ai-')) {
-            const pokemonData = data.data;
-            setSelectedPokemon(pokemonData);
-            setSearchTerm(pokemonData.name);
-          } else {
-            // For regular Pokemon cards, find the one that matches the ID
-            const allPokemon = data.data;
-            setPokemon(allPokemon);
-            setFilteredPokemon(allPokemon);
-            
-            const pokemonById = allPokemon.find(p => p.id === id);
-            if (pokemonById) {
-              setSelectedPokemon(pokemonById);
-              setSearchTerm(pokemonById.name);
-            }
-          }
-          
-          setLoading(false);
-        })
-        .catch(err => {
-          console.error('Error fetching Pokémon:', err);
-          setLoading(false);
-        });
+      // If we have an ID parameter, just fetch that specific card
+      fetchSinglePokemon(id);
     } else {
-      // No ID provided, fetch all cards (original behavior)
-      fetch('http://127.0.0.1:8000/api/pokemon/')
-        .then(res => res.json())
-        .then(data => {
-          setPokemon(data.data);
-          setFilteredPokemon(data.data);
-          
-          const shuffled = [...data.data].sort(() => 0.5 - Math.random());
-          setCarouselPokemon(shuffled.slice(0, 10));
-          
-          setLoading(false);
-        })
-        .catch(err => {
-          console.error('Error fetching Pokémon:', err);
-          setLoading(false);
-        });
+      // Just load featured/random cards for initial view
+      fetchFeaturedPokemon();
     }
   }, [id]);
+
+  const fetchSinglePokemon = async (pokemonId) => {
+    setLoading(true);
+    try {
+      // Determine which API endpoint to use based on the card ID
+      const fetchUrl = pokemonId.startsWith('ai-')
+        ? `http://127.0.0.1:8000/api/aigen/cards/${pokemonId}/`  // AI-generated card
+        : `http://127.0.0.1:8000/api/pokemon/${pokemonId}/`;     // Regular Pokemon card
+        
+      const response = await fetch(fetchUrl);
+      if (!response.ok) {
+        throw new Error('Failed to fetch card details');
+      }
+      
+      const data = await response.json();
+      
+      // For both API and AI cards, the data is in a 'data' property
+      setSelectedPokemon(data.data);
+      setSearchTerm(data.data.name);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching card:', error);
+      setLoading(false);
+    }
+  };
+
+  const fetchFeaturedPokemon = async () => {
+    setLoading(true);
+    try {
+      // Load just the first page of Pokemon for the carousel
+      const response = await fetch('http://127.0.0.1:8000/api/pokemon/?page=1&pageSize=20');
+      if (!response.ok) {
+        throw new Error('Failed to fetch featured Pokemon');
+      }
+      
+      const data = await response.json();
+      const pokemonData = data.data;
+      
+      // Create a carousel of random Pokemon
+      const shuffled = [...pokemonData].sort(() => 0.5 - Math.random());
+      setCarouselPokemon(shuffled.slice(0, 10));
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching featured Pokemon:', error);
+      setLoading(false);
+    }
+  };
 
   const handleSearch = (e) => {
     const value = e.target.value;
     setSearchTerm(value);
 
-    const filtered = pokemon.filter((poke) =>
-      poke.name.toLowerCase().includes(value.toLowerCase())
-    );
+    // Clear previous timeout
+    if (typingTimeout) {
+      clearTimeout(typingTimeout);
+    }
 
-    setFilteredPokemon(filtered);
-    setSelectedPokemon(null); // Clear selection when searching
+    // Don't search if the input is empty
+    if (!value.trim()) {
+      setFilteredPokemon([]);
+      return;
+    }
+
+    // Set new timeout for search debouncing
+    setTypingTimeout(setTimeout(() => {
+      performSearch(value);
+    }, 500));
+  };
+
+  const performSearch = async (query) => {
+    if (!query.trim()) return;
+    
+    setSearchLoading(true);
+    try {
+      // Use server-side search with the query parameter
+      const response = await fetch(`http://127.0.0.1:8000/api/pokemon/?q=${query}&pageSize=20`);
+      if (!response.ok) {
+        throw new Error('Failed to search Pokemon');
+      }
+      
+      const data = await response.json();
+      setPokemon(data.data);
+      setFilteredPokemon(data.data);
+      setSelectedPokemon(null); // Clear selection when searching
+      setSearchLoading(false);
+    } catch (error) {
+      console.error('Error searching Pokemon:', error);
+      setSearchLoading(false);
+    }
   };
 
   const handlePokemonSelect = (poke) => {
@@ -172,6 +205,7 @@ const PokemonStatsPage = () => {
             onChange={handleSearch}
             className="search-input"
           />
+          {searchLoading && <span className="search-loading">Searching...</span>}
         </div>
         
         {loading ? (
@@ -228,7 +262,9 @@ const PokemonStatsPage = () => {
         ) : searchTerm ? (
           <div className="search-results-container">
             <h3>Search Results</h3>
-            {filteredPokemon.length > 0 ? (
+            {searchLoading ? (
+              <div className="loading">Searching...</div>
+            ) : filteredPokemon.length > 0 ? (
               <div className="pokemon-grid">
                 {filteredPokemon.map((poke) => (
                   <div 
@@ -244,7 +280,8 @@ const PokemonStatsPage = () => {
               </div>
             ) : (
               <div className="no-results">
-                No Pokémon found matching "{searchTerm}"
+                <p>No Pokémon found matching "{searchTerm}"</p>
+                <p className="search-tip">Try using the full name or a different spelling</p>
                 <div className="carousel-container">
                   <h3>Featured Pokémon Cards</h3>
                   <div className="carousel">
