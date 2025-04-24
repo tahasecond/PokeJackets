@@ -11,6 +11,8 @@ from django.db import transaction
 from marketplace.models import User_wallet
 import json
 from decimal import Decimal
+from django.urls import reverse
+from django.shortcuts import redirect
 
 # Create your views here.
 
@@ -36,26 +38,41 @@ def pokemon_list(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def user_collection(request):
+    """
+    API endpoint to retrieve a user's card collection.
+    """
     # Get the authenticated user
     user = request.user
     
     # Get the user's cards
     user_cards = UserCard.objects.filter(user=user)
-    card_ids = [card.pokemon_id for card in user_cards]
-    
-    # Get details for each card from Pokemon TCG API
     cards_data = []
     headers = {"X-Api-Key": API_KEY}
     
-    for card_id in card_ids:
+    for card in user_cards:
         try:
-            url = f"https://api.pokemontcg.io/v2/cards/{card_id}"
-            response = requests.get(url, headers=headers)
-            if response.status_code == 200:
-                card_data = response.json()
-                cards_data.append(card_data['data'])
-        except requests.exceptions.RequestException as e:
-            # Continue even if one card fails
+            pokemon_id = card.pokemon_id
+            
+            # Check if this is an AI-generated card
+            if pokemon_id.startswith('ai-'):
+                # For AI-generated cards, fetch from our local endpoint
+                ai_response = requests.get(
+                    f"http://localhost:8000/api/aigen/cards/{pokemon_id}/",
+                    headers=headers
+                )
+                if ai_response.status_code == 200:
+                    card_data = ai_response.json()
+                    cards_data.append(card_data['data'])
+            else:
+                # For regular Pokemon TCG API cards
+                url = f"https://api.pokemontcg.io/v2/cards/{pokemon_id}"
+                response = requests.get(url, headers=headers)
+                if response.status_code == 200:
+                    card_data = response.json()
+                    cards_data.append(card_data['data'])
+        except Exception as e:
+            # Log error but continue with the next card
+            print(f"Error fetching card {card.pokemon_id}: {str(e)}")
             continue
     
     return JsonResponse({"data": cards_data})
@@ -126,3 +143,28 @@ def purchase_card(request):
         
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+# Add a new function to handle both regular and AI cards
+def pokemon_detail(request, card_id):
+    """
+    Endpoint to get details for a specific card (API or AI-generated)
+    """
+    if card_id.startswith('ai-gen-'):
+        # Redirect to AI card details endpoint
+        return redirect(f'/api/aigen/cards/{card_id}/')
+    else:
+        # Regular Pokemon TCG API card
+        url = f"https://api.pokemontcg.io/v2/cards/{card_id}"
+        headers = {"X-Api-Key": API_KEY}
+        
+        try:
+            response = requests.get(url, headers=headers)
+            if response.status_code == 200:
+                return JsonResponse(response.json(), safe=False)
+            else:
+                return JsonResponse(
+                    {"error": "Failed to fetch card details"}, 
+                    status=response.status_code
+                )
+        except requests.exceptions.RequestException as e:
+            return JsonResponse({"error": str(e)}, status=500)

@@ -184,26 +184,44 @@ textarea {
   width: 50%;
 }
 
-.generate-button {
-  width: 100%;
-  background-color: #e60012;
-  color: white;
-  border: none;
-  border-radius: 25px;
-  padding: 12px;
-  font-size: 1.1rem;
-  font-weight: bold;
-  cursor: pointer;
-  margin-top: 15px;
-  transition: background-color 0.2s;
+.generation-cost-info {
+  background-color: #f8f8f8;
+  border-radius: 5px;
+  padding: 10px 15px;
+  margin: 15px 0;
+  border-left: 4px solid #4caf50;
 }
 
-.generate-button:hover {
-  background-color: #cc0010;
+.cost-amount {
+  font-weight: bold;
+  color: #4caf50;
+}
+
+.cost-explanation {
+  font-size: 12px;
+  color: #666;
+  margin-top: 5px;
+}
+
+.generate-button {
+  background-color: #2196f3;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 16px;
+  transition: background-color 0.2s;
+  width: 100%;
+}
+
+.generate-button:hover:not(:disabled) {
+  background-color: #0b7dda;
 }
 
 .generate-button:disabled {
-  background-color: #f5a0a0;
+  background-color: #cccccc;
   cursor: not-allowed;
 }
 
@@ -302,47 +320,71 @@ textarea {
 .generated-card {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  width: 90%;
-  height: 90%;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  background-color: white;
+  overflow: hidden;
+  max-width: 100%;
 }
 
 .card-image {
-  width: 200px;
+  width: 100%;
   height: 200px;
-  background-color: #f0f0f0;
-  border-radius: 10px;
-  margin-bottom: 15px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f5f5f5;
+  position: relative;
+}
+
+.generated-pokemon-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
 }
 
 .card-info {
-  text-align: center;
-  width: 100%;
+  padding: 15px;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
 }
 
 .card-name {
-  font-size: 1.3rem;
-  margin: 5px 0;
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0 0 8px 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .card-type-badge {
   display: inline-block;
-  padding: 5px 15px;
-  border-radius: 15px;
-  background-color: #f8d030;
+  padding: 3px 8px;
+  background-color: #f0f0f0;
   color: #333;
-  font-size: 0.9rem;
-  margin: 5px 0;
+  border-radius: 12px;
+  font-size: 12px;
+  margin-bottom: 10px;
 }
 
 .card-stats {
-  font-size: 1rem;
-  margin: 10px 0;
+  font-size: 14px;
+  margin-bottom: 10px;
+  color: #666;
 }
 
 .card-abilities {
-  font-size: 0.9rem;
-  color: #666;
+  font-size: 14px;
+  line-height: 1.4;
+  color: #333;
+  max-height: 100px;
+  overflow-y: auto;
+  padding-right: 5px;
+  padding: 5px;
+  background-color: #f9f9f9;
+  border-radius: 4px;
 }
 
 .generating-overlay {
@@ -375,30 +417,24 @@ textarea {
 }
 
 .save-button {
-  width: 100%;
-  background-color: #ddd;
-  color: #333;
-  border: none;
-  border-radius: 25px;
-  padding: 12px;
-  font-size: 1.1rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.save-button:enabled {
-  background-color: #4a6dff;
+  padding: 10px 15px;
+  background-color: #4caf50;
   color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s;
+  margin-top: 15px;
 }
 
-.save-button:enabled:hover {
-  background-color: #3a5ae0;
+.save-button:hover {
+  background-color: #45a049;
 }
 
 .save-button:disabled {
+  background-color: #cccccc;
   cursor: not-allowed;
-  color: #999;
 }
 
 /* Recent Generations Styles */
@@ -475,15 +511,6 @@ textarea {
   justify-content: center;
   width: 40px;
   font-size: 1.5rem;
-}
-
-/* Styles for Generated Pokemon Images */
-.generated-pokemon-image {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  border-radius: 8px;
-  display: block;
 }
 
 .recent-card-image img {

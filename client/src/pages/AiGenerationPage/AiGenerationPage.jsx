@@ -69,6 +69,7 @@ const AiGenerationPage = () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Token ${localStorage.getItem('token')}`
       },
       body: JSON.stringify({
         name: pokemonName,
@@ -82,13 +83,16 @@ const AiGenerationPage = () => {
     .then(response => {
       console.log("API response status:", response.status);
       if (!response.ok) {
-        throw new Error('Failed to generate Pokémon');
+        return response.json().then(err => {
+          throw new Error(err.error || 'Failed to generate Pokémon');
+        });
       }
       return response.json();
     })
     .then(data => {
       console.log("Generated card data:", data);
       setGeneratedCard({
+        id: data.id,
         name: data.name,
         description: data.description,
         primaryType: data.primaryType,
@@ -98,23 +102,85 @@ const AiGenerationPage = () => {
         attack: data.attack,
         defense: data.defense,
         imageUrl: data.imageUrl,
+        uniqueId: data.uniqueId
       });
+      
+      // Update the balance if provided
+      if (data.newBalance !== undefined) {
+        setBalance(data.newBalance);
+      }
+      
       setIsGenerating(false);
       // Reload recent cards after successful generation
       loadRecentCards();
     })
     .catch(error => {
       console.error('Error generating Pokémon:', error);
-      alert('Failed to generate Pokémon. Please try again.');
+      alert(`Failed to generate Pokémon: ${error.message}`);
       setIsGenerating(false);
     });
   };
 
-  const handleSaveToCollection = () => {
+  const handleSaveToCollection = async () => {
     if (generatedCard) {
-      alert(`${generatedCard.name} has been saved to your collection!`);
-      // Here you would typically save to a database
+      console.log("Generated card data:", generatedCard); // Debug log to see what's available
+      
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          alert('You must be logged in to save cards to your collection');
+          return;
+        }
+        
+        // Make sure we're sending the correct ID
+        // The ID might be in different properties depending on your API response
+        const cardId = generatedCard.id || generatedCard.card_id;
+        
+        if (!cardId) {
+          alert('Card ID not found. Cannot save to collection.');
+          console.error('Card ID missing from:', generatedCard);
+          return;
+        }
+        
+        const response = await fetch('http://127.0.0.1:8000/api/aigen/save-to-collection/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Token ${token}`
+          },
+          body: JSON.stringify({
+            card_id: cardId
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.message || 'Failed to save card to collection');
+        }
+        
+        alert(data.message || 'Card saved to your collection!');
+        
+      } catch (err) {
+        alert(`Error: ${err.message || 'Failed to save card'}`);
+      }
+    } else {
+      alert('No card generated yet. Generate a card first!');
     }
+  };
+
+  // Add this function to get the cost based on selected rarity
+  const getGenerationCost = (selectedRarity) => {
+    const rarityCosts = {
+      'Common': 50,
+      'Uncommon': 100,
+      'Rare': 250,
+      'Rare Holo': 400,
+      'Rare Ultra': 600,
+      'Legendary': 750
+    };
+    
+    return rarityCosts[selectedRarity] || 100;
   };
 
   console.log("About to return JSX");
@@ -208,12 +274,17 @@ const AiGenerationPage = () => {
               </select>
             </div>
             
+            <div className="generation-cost-info">
+              <p>Generation cost: <span className="cost-amount">{getGenerationCost(rarity)} PD</span></p>
+              <p className="cost-explanation">Higher rarity cards cost more to generate</p>
+            </div>
+            
             <button 
               className="generate-button" 
               onClick={handleGenerate}
-              disabled={isGenerating}
+              disabled={isGenerating || !pokemonName}
             >
-              Generate (Cost: P 150)
+              {isGenerating ? 'Generating...' : 'Generate Pokémon'}
             </button>
           </div>
           

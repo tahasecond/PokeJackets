@@ -14,29 +14,59 @@ const PokemonStatsPage = () => {
   const [carouselPokemon, setCarouselPokemon] = useState([]);
 
   useEffect(() => {
-    fetch('http://127.0.0.1:8000/api/pokemon/')
-      .then((res) => res.json())
-      .then((data) => {
-        setPokemon(data.data);
-        setFilteredPokemon(data.data);
+    if (id) {
+      setLoading(true);
+      
+      // Determine which API endpoint to use based on the card ID
+      const fetchUrl = id.startsWith('ai-')
+        ? `http://127.0.0.1:8000/api/aigen/cards/${id}/`  // AI-generated card endpoint
+        : `http://127.0.0.1:8000/api/pokemon/`; // Regular Pokemon endpoint
         
-        if (id) {
-          const pokemonById = data.data.find(p => p.id === id);
-          if (pokemonById) {
-            setSelectedPokemon(pokemonById);
-            setSearchTerm(pokemonById.name);
+      fetch(fetchUrl)
+        .then(res => res.json())
+        .then(data => {
+          // For AI cards, the data format is different (it has a 'data' property)
+          if (id.startsWith('ai-')) {
+            const pokemonData = data.data;
+            setSelectedPokemon(pokemonData);
+            setSearchTerm(pokemonData.name);
+          } else {
+            // For regular Pokemon cards, find the one that matches the ID
+            const allPokemon = data.data;
+            setPokemon(allPokemon);
+            setFilteredPokemon(allPokemon);
+            
+            const pokemonById = allPokemon.find(p => p.id === id);
+            if (pokemonById) {
+              setSelectedPokemon(pokemonById);
+              setSearchTerm(pokemonById.name);
+            }
           }
-        } else {
+          
+          setLoading(false);
+        })
+        .catch(err => {
+          console.error('Error fetching Pokémon:', err);
+          setLoading(false);
+        });
+    } else {
+      // No ID provided, fetch all cards (original behavior)
+      fetch('http://127.0.0.1:8000/api/pokemon/')
+        .then(res => res.json())
+        .then(data => {
+          setPokemon(data.data);
+          setFilteredPokemon(data.data);
+          
           const shuffled = [...data.data].sort(() => 0.5 - Math.random());
           setCarouselPokemon(shuffled.slice(0, 10));
-        }
-        
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error('Error fetching Pokémon:', err);
-        setLoading(false);
-      });
+          
+          setLoading(false);
+        })
+        .catch(err => {
+          console.error('Error fetching Pokémon:', err);
+          setLoading(false);
+        });
+    }
   }, [id]);
 
   const handleSearch = (e) => {
@@ -62,58 +92,69 @@ const PokemonStatsPage = () => {
   };
 
   // Define renderAttack function properly
-  const renderAttack = (attack, index) => (
-    <div key={index} className="attack-item">
-      <div className="attack-header">
-        <span className="attack-name">{attack.name}</span>
-        <span className="attack-cost">
+  const renderAttack = (attack, index) => {
+    if (!attack) return null;
+    
+    return (
+      <div key={index} className="attack-item">
+        <div className="attack-header">
+          <span className="attack-name">{attack.name}</span>
+          <span className="attack-damage">{attack.damage || ""}</span>
+        </div>
+        <div className="attack-cost">
           {attack.cost && attack.cost.map((type, i) => (
             <span key={i} className={`energy-symbol ${type.toLowerCase()}`}>{type}</span>
           ))}
-        </span>
-      </div>
-      <div className="attack-details">
-        <span className="attack-damage">{attack.damage}</span>
+        </div>
         <p className="attack-text">{attack.text}</p>
       </div>
-    </div>
-  );
+    );
+  };
 
   // Define renderWeaknessResistance function properly
   const renderWeaknessResistance = () => {
-    const weaknesses = selectedPokemon.weaknesses || [];
-    const resistances = selectedPokemon.resistances || [];
+    if (!selectedPokemon) return null;
     
     return (
-      <div className="weakness-resistance-container">
-        {weaknesses.length > 0 && (
-          <div className="weakness-item">
-            <span className="wr-label">Weakness: </span>
-            {weaknesses.map((wk, i) => (
-              <span key={i}>
-                <span className={`energy-symbol ${wk.type.toLowerCase()}`}>{wk.type}</span>
-                <span>{wk.value}</span>
-              </span>
+      <div className="weakness-resistance">
+        {selectedPokemon.weaknesses && (
+          <div className="weakness-section">
+            <h4>Weakness</h4>
+            {selectedPokemon.weaknesses.map((weakness, i) => (
+              <div key={i} className="type-with-value">
+                <span className={`type-symbol ${weakness.type.toLowerCase()}`}>
+                  {weakness.type}
+                </span>
+                <span className="value">{weakness.value}</span>
+              </div>
             ))}
           </div>
         )}
-        {resistances.length > 0 && (
-          <div className="resistance-item">
-            <span className="wr-label">Resistance: </span>
-            {resistances.map((res, i) => (
-              <span key={i}>
-                <span className={`energy-symbol ${res.type.toLowerCase()}`}>{res.type}</span>
-                <span>{res.value}</span>
-              </span>
+        
+        {selectedPokemon.resistances && (
+          <div className="resistance-section">
+            <h4>Resistance</h4>
+            {selectedPokemon.resistances.map((resistance, i) => (
+              <div key={i} className="type-with-value">
+                <span className={`type-symbol ${resistance.type.toLowerCase()}`}>
+                  {resistance.type}
+                </span>
+                <span className="value">{resistance.value}</span>
+              </div>
             ))}
           </div>
         )}
-        <div className="retreat-cost">
-          <span className="wr-label">Retreat Cost: </span>
-          {selectedPokemon.retreatCost && selectedPokemon.retreatCost.map((type, i) => (
-            <span key={i} className={`energy-symbol ${type.toLowerCase()}`}>{type}</span>
-          ))}
-        </div>
+        
+        {selectedPokemon.retreatCost && (
+          <div className="retreat-section">
+            <h4>Retreat Cost</h4>
+            <div className="retreat-cost">
+              {selectedPokemon.retreatCost.map((type, i) => (
+                <span key={i} className={`energy-symbol ${type.toLowerCase()}`}>{type}</span>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     );
   };
@@ -141,9 +182,9 @@ const PokemonStatsPage = () => {
               <img src={selectedPokemon.images.large} alt={selectedPokemon.name} className="pokemon-image" />
               <div className="card-info">
                 <h2>{selectedPokemon.name}</h2>
-                <p><strong>Set:</strong> {selectedPokemon.set.name}</p>
+                <p><strong>Set:</strong> {selectedPokemon.set?.name || "AI Generated"}</p>
                 <p><strong>Rarity:</strong> {selectedPokemon.rarity}</p>
-                <p><strong>Card #:</strong> {selectedPokemon.number}/{selectedPokemon.set.printedTotal}</p>
+                <p><strong>Card #:</strong> {selectedPokemon.number || selectedPokemon.id}</p>
                 {selectedPokemon.flavorText && (
                   <p className="flavor-text">"{selectedPokemon.flavorText}"</p>
                 )}

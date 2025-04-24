@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import './Components.css';
 
-const Navbar = ({ initialBalance }) => {
+const Navbar = ({ balance }) => {
   const location = useLocation();
   const [username, setUsername] = useState("Trainer");
-  const [balance, setBalance] = useState(initialBalance || 2500);
+  const [currentBalance, setCurrentBalance] = useState(balance || 2500);
   
   useEffect(() => {
     // Get user information from localStorage or API
@@ -24,6 +24,12 @@ const Navbar = ({ initialBalance }) => {
       }
     }
   }, [location.pathname]); // Re-fetch when route changes
+  
+  useEffect(() => {
+    if (balance !== undefined) {
+      setCurrentBalance(balance);
+    }
+  }, [balance]);
   
   const fetchUserProfile = (token) => {
     fetch('http://127.0.0.1:8000/api/user/profile/', {
@@ -53,7 +59,7 @@ const Navbar = ({ initialBalance }) => {
     .then(response => response.json())
     .then(data => {
       if (data.balance !== undefined) {
-        setBalance(data.balance);
+        setCurrentBalance(data.balance);
       }
     })
     .catch(error => {
@@ -120,7 +126,7 @@ const Navbar = ({ initialBalance }) => {
       <div className="user-info">
         <div className="balance-display">
           <span className="currency-symbol">P</span>
-          <span className="balance-amount">{balance.toLocaleString()}</span>
+          <span className="balance-amount">{currentBalance.toLocaleString()}</span>
         </div>
         <div className="user-profile">
           <span className="username">{username}</span>
