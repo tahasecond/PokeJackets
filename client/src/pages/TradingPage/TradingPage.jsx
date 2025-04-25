@@ -25,7 +25,8 @@ const TradingPage = () => {
     const [tradeCardDetails, setTradeCardDetails] = useState({});
     const [showResponseModal, setShowResponseModal] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-
+    const [showPopup, setShowPopup] = useState(false); // Controls visibility of the popup
+    const [currentTradeId, setCurrentTradeId] = useState(null); // Stores the current trade ID
     const fetchAllData = async () => {
         const token = localStorage.getItem('token');
         try {
@@ -277,6 +278,56 @@ const TradingPage = () => {
         }
     };
 
+    const respondToTrade = async (tradeId, action) => {
+        try {
+            const token = localStorage.getItem('token');
+
+            const url = `http://localhost:8000/api/trades/${tradeId}/respond/`;
+
+            // For GET requests (viewing trade details)
+            if (action === 'view') {
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Token ${token}`
+                    }
+                });
+
+                const data = await response.json();
+                console.log('Trade details:', data);
+                return data;
+            }
+
+            // For POST requests (responding to trade)
+            const body = {
+                action: action,
+                ...(action === 'accept' && { card_id: selectedResponseCard })
+            };
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Token ${token}`
+                },
+                body: JSON.stringify(body)
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to respond to trade');
+            }
+
+            alert(data.message);
+            fetchPendingTrades();
+            setShowAcceptModal(false);
+
+        } catch (error) {
+            console.error('Trade error:', error);
+            setTradeError(error.message);
+        }
+    };
 
     const [pendingTrades, setPendingTrades] = useState({
         received: [],
@@ -299,54 +350,10 @@ const TradingPage = () => {
         }
     };
 
-    const respondToTrade = async (tradeId, action) => {
-        try {
-            const token = localStorage.getItem('token');
-            let body = { action };
-
-            // If accepting and we need to select a card
-            if (action === 'accept' && !selectedResponseCard) {
-                setCurrentTrade(pendingTrades.received.find(t => t.id === tradeId));
-                setShowResponseModal(true);
-                return;
-            }
-
-            if (selectedResponseCard) {
-                body.recipient_card_id = selectedResponseCard;
-            }
-
-            const response = await fetch(`http://localhost:8000/api/trades/${tradeId}/respond/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Token ${token}`
-                },
-                body: JSON.stringify(body)
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                fetchPendingTrades();
-                fetchUserCollection();
-                setSelectedResponseCard(null);
-                setShowResponseModal(false);
-
-                if (action === 'accept') {
-                    alert(data.status === 'awaiting_response'
-                        ? 'Trade offer sent to original sender!'
-                        : 'Trade completed successfully!');
-                } else {
-                    alert('Trade declined');
-                }
-            } else {
-                setTradeError(data.error || 'Failed to respond to trade');
-            }
-        } catch (error) {
-            console.error('Error responding to trade:', error);
-            setTradeError('Network error. Please try again.');
-        }
-    };
+    const [currentTrade, setCurrentTrade] = useState(null);
+    const [selectedResponseCard, setSelectedResponseCard] = useState(null);
+    const [showAcceptModal, setShowAcceptModal] = useState(false);
+    const [completedTrades, setCompletedTrades] = useState([]);
 
     useEffect(() => {
         fetchPendingTrades();
@@ -368,6 +375,66 @@ const TradingPage = () => {
             });
         }
     }, [pendingTrades]);
+
+
+    const handleAcceptClick = (tradeId) => {
+
+        setShowPopup(true);
+        setCurrentTradeId(tradeId);
+        fetchUserCollection();
+    };
+
+
+    const handleSubmit = async () => {
+        if (!selectedCardId) {
+            alert('Please select a card to trade!');
+            return;
+        }
+
+        try {
+            // Submit the selected card for accepting the trade
+            await acceptTrade(currentTradeId, selectedCardId);
+            setShowPopup(false); // Close the popup after submission
+        } catch (error) {
+            console.error('Trade error:', error);
+        }
+    };
+
+    const acceptTrade = async (tradeId, selectedCardId) => {
+        try {
+            const token = localStorage.getItem('token');
+            const url = `http://localhost:8000/api/trades/${tradeId}/respond/`;
+
+            const body = {
+                action: 'accept',
+                card_id: selectedCardId, // Send the selected card ID
+            };
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Token ${token}`,
+                },
+                body: JSON.stringify(body),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to respond to trade');
+            }
+
+            alert(data.message);
+            fetchPendingTrades(); // Refresh pending trades
+            setShowAcceptModal(false); // Close the modal
+        } catch (error) {
+            console.error('Trade error:', error);
+            setTradeError(error.message);
+        }
+    };
+
+
 
     return (
         <div className="trading-page-container">
@@ -510,7 +577,8 @@ const TradingPage = () => {
                                         </div>
                                     </div>
                                     <div className="trade-actions">
-                                        <button onClick={() => respondToTrade(trade.id, 'accept')}>
+                                        <h4>{trade.id}</h4>
+                                        <button onClick={() => handleAcceptClick(trade.id)}>
                                             Accept
                                         </button>
                                         <button onClick={() => respondToTrade(trade.id, 'decline')}>
@@ -716,6 +784,100 @@ const TradingPage = () => {
                             </button>
                         </div>
                     </div>
+                </div>
+            )}
+
+            {showAcceptModal && currentTrade && (
+                <div className="modal-overlay">
+                    <div className="modal">
+                        <h3>Select Your Pokémon to Trade</h3>
+                        <p>You're accepting {currentTrade.sender}'s {tradeCardDetails[currentTrade.card_id]?.name}</p>
+
+                        <div className="cards-grid">
+                            {userCards.map(card => (
+                                <div
+                                    key={card.id}
+                                    className={`card-item ${selectedResponseCard === card.id ? 'selected' : ''}`}
+                                    onClick={() => setSelectedResponseCard(card.id)}
+                                >
+                                    <img src={card.image} alt={card.name} className="card-image" />
+                                    <p className="card-name">
+                                        {card.name}
+                                        {selectedResponseCard === card.id && <span> ✓</span>}
+                                    </p>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="modal-actions">
+                            <button
+                                onClick={() => {
+                                    setShowAcceptModal(false);
+                                    setSelectedResponseCard(null);
+                                }}
+                                className="cancel-btn"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => respondToTrade(currentTrade.id, 'accept')}
+                                disabled={!selectedResponseCard}
+                                className="submit-btn"
+                            >
+                                Confirm Trade
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <div className="completed-trades">
+                <h3>Completed Trades</h3>
+                {completedTrades.length > 0 ? (
+                    completedTrades.map(trade => (
+                        <div key={trade.id} className="trade-item completed">
+                            <div className="trade-details">
+                                <p>
+                                    <strong>{trade.sender}</strong> traded
+                                    <strong> {tradeCardDetails[trade.sender_card]?.name || trade.sender_card}</strong>
+                                </p>
+                                <p>
+                                    <strong>You</strong> traded
+                                    <strong> {tradeCardDetails[trade.recipient_card]?.name || trade.recipient_card}</strong>
+                                </p>
+                                <small>{new Date(trade.completed_at).toLocaleString()}</small>
+                            </div>
+                        </div>
+                    ))
+                ) : (
+                    <p>No completed trades yet</p>
+                )}
+            </div>
+
+            {showPopup && (
+                <div className="popup">
+                    <h2>Select a card to trade</h2>
+                    <div className="cards-grid">
+                        {userCards.map(card => (
+                            <div
+                                key={card.id}
+                                className={`card-item ${selectedCardId === card.id ? 'selected' : ''}`}
+                                onClick={() => {
+                                    setSelectedCardId(card.id); // Update the selected card
+                                }}
+                            >
+                                <p className="card-name">
+                                    {card.name}
+                                    {selectedCardId === card.id && (
+                                        <span className="selected-badge">✓</span>
+                                    )}
+                                </p>
+                                <img src={card.image} alt={card.name} />
+                            </div>
+                        ))}
+                    </div>
+                    <button onClick={handleSubmit}>Submit</button>
+                    <button onClick={() => setShowPopup(false)}>Cancel</button>
                 </div>
             )}
         </div>

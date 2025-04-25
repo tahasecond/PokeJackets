@@ -50,16 +50,12 @@ class RequestTrade(models.Model):
 
 
 class Trade(models.Model):
-    PENDING = "pending"
-    ACCEPTED = "accepted"
-    DECLINED = "declined"
-    AWAITING_RESPONSE = "awaiting_response"  # New status
-
     STATUS_CHOICES = [
-        (PENDING, "Pending"),
-        (ACCEPTED, "Accepted"),
-        (DECLINED, "Declined"),
-        (AWAITING_RESPONSE, "Awaiting Response"),  # When first user accepts
+        ("pending", "Pending"),
+        ("accepted", "Accepted"),
+        ("declined", "Declined"),
+        ("countered", "Countered"),
+        ("completed", "Completed"),
     ]
 
     sender = models.ForeignKey(
@@ -68,9 +64,8 @@ class Trade(models.Model):
     recipient = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="received_trades"
     )
-    sender_card = models.CharField(max_length=50)  # Card being offered by sender
-    recipient_card = models.CharField(
-        max_length=50, null=True, blank=True
-    )  # Card being offered by recipient
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=PENDING)
+    sender_card = models.CharField(max_length=50)
+    recipient_card = models.CharField(max_length=50, null=True, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
     created_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)

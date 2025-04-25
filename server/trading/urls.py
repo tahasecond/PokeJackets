@@ -6,6 +6,7 @@ from .views import (
     PendingFriendRequestsView,
     create_trade,
     pending_trades,
+    respond_to_trade,
 )
 
 urlpatterns = [
@@ -21,4 +22,5 @@ urlpatterns = [
     ),
     path("trades/create/", create_trade, name="create-trade"),
     path("trades/pending/", pending_trades, name="pending-trades"),
+    path("trades/<int:trade_id>/respond/", respond_to_trade, name="respond_to_trade"),
 ]

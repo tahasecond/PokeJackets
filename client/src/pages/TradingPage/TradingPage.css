@@ -461,3 +461,64 @@
         transform: scale(1);
     }
 }
+
+/* Trade Modals */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+/* Completed Trades */
+.completed-trades {
+    margin-top: 20px;
+    padding: 15px;
+    background: #f9f9f9;
+    border-radius: 8px;
+}
+
+.trade-item.completed {
+    border-left: 4px solid #4CAF50;
+    padding-left: 10px;
+    margin: 10px 0;
+}
+
+.trade-details {
+    background: white;
+    padding: 10px;
+    border-radius: 4px;
+}
+
+.card-item.selected {
+    background-color: lightblue;
+    /* Highlight selected cards */
+}
+
+.selected-badge {
+    color: green;
+    font-weight: bold;
+}

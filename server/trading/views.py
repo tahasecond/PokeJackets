@@ -1,3 +1,5 @@
+from datetime import timezone
+import logging
 from django.shortcuts import get_object_or_404, render
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
@@ -250,51 +252,75 @@ def pending_trades(request):
         )
 
     except Exception as e:
-        print(f"Error in pending_trades: {str(e)}")  # Debug print
+        print(f"Error in pending_trades: {str(e)}")
         return Response(
             {"error": "Internal server error"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
 
-@api_view(["POST"])
-@api_view(["POST"])
+logger = logging.getLogger(__name__)
+
+
+@api_view(["GET", "POST"])
 @permission_classes([IsAuthenticated])
 def respond_to_trade(request, trade_id):
-    trade = get_object_or_404(Trade, id=trade_id)
-    action = request.data.get("action")
-    recipient_card_id = request.data.get("recipient_card_id")
+    logger.info(f"Received {request.method} request for trade ID: {trade_id}")
+    try:
+        trade = get_object_or_404(Trade, id=trade_id)
 
-    # Validate user can respond to this trade
-    if request.user not in [trade.sender, trade.recipient]:
-        return Response({"error": "Not authorized"}, status=403)
+        # GET request - view trade details
+        if request.method == "GET":
+            return Response(
+                {
+                    "id": trade.id,
+                    "sender": trade.sender.username,
+                    "recipient": trade.recipient.username,
+                    "sender_card": trade.sender_card,
+                    "status": trade.status,
+                    "created_at": trade.created_at,
+                }
+            )
 
-    if action == "accept":
-        if trade.status == "pending" and request.user == trade.recipient:
-            # First acceptance (by recipient)
-            if not recipient_card_id:
-                return Response({"error": "Please select a card to trade"}, status=400)
+        # POST request - respond to trade
+        elif request.method == "POST":
+            # Verify request user is the recipient
+            if request.user != trade.recipient:
+                return Response(
+                    {"error": "Only the recipient can respond to this trade"},
+                    status=403,
+                )
 
-            if not UserCard.objects.filter(
-                user=request.user, pokemon_id=recipient_card_id
-            ).exists():
-                return Response({"error": "You don't own this card"}, status=400)
+            action = request.data.get("action")
+            card_id = request.data.get("card_id")
 
-            trade.recipient_card = recipient_card_id
-            trade.status = "awaiting_response"
-            trade.save()
-            return Response({"status": trade.status})
+            if action == "accept":
+                if not card_id:
+                    return Response(
+                        {"error": "Please select a card to trade"}, status=400
+                    )
 
-        elif trade.status == "awaiting_response" and request.user == trade.sender:
-            # Final acceptance (by original sender)
-            trade.status = "accepted"
-            trade.save()
-            # TODO: Add card transfer logic here
-            return Response({"status": trade.status})
+                # Verify card ownership
+                if not UserCard.objects.filter(
+                    user=request.user, pokemon_id=card_id
+                ).exists():
+                    return Response({"error": "You do not own this card"}, status=400)
 
-    elif action == "decline":
-        trade.status = "declined"
-        trade.save()
-        return Response({"status": trade.status})
+                # Update trade status
+                trade.recipient_card = card_id
+                trade.status = "completed"
+                trade.save()
 
-    return Response({"error": "Invalid action for current trade state"}, status=400)
+                return Response(
+                    {"status": "completed", "message": "Trade completed successfully"}
+                )
+
+            elif action == "decline":
+                trade.status = "declined"
+                trade.save()
+                return Response({"status": "declined", "message": "Trade declined"})
+
+            return Response({"error": "Invalid action"}, status=400)
+
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
