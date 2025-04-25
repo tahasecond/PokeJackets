@@ -1,6 +1,7 @@
 from datetime import timezone
 import logging
 from django.shortcuts import get_object_or_404, render
+from django.test import TransactionTestCase
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -12,6 +13,7 @@ from django.db.models import Q
 from pokemon.models import UserCard
 from .models import Trade
 from rest_framework.decorators import api_view, permission_classes
+from django.utils.timezone import now
 
 
 # Create your views here.
@@ -222,11 +224,11 @@ def pending_trades(request):
     try:
         received = Trade.objects.filter(
             recipient=request.user, status="pending"
-        ).select_related("sender")
+        ).select_related("sender", "recipient")
 
         sent = Trade.objects.filter(
             sender=request.user, status="pending"
-        ).select_related("recipient")
+        ).select_related("sender", "recipient")
 
         return Response(
             {
@@ -234,6 +236,9 @@ def pending_trades(request):
                     {
                         "id": t.id,
                         "sender": t.sender.username,
+                        "sender_id": t.sender.id,
+                        "recipient": t.recipient.username,
+                        "recipient_id": t.recipient.id,
                         "card_id": t.sender_card,
                         "created_at": t.created_at,
                     }
@@ -242,7 +247,10 @@ def pending_trades(request):
                 "sent": [
                     {
                         "id": t.id,
+                        "sender": t.sender.username,
+                        "sender_id": t.sender.id,
                         "recipient": t.recipient.username,
+                        "recipient_id": t.recipient.id,
                         "card_id": t.sender_card,
                         "created_at": t.created_at,
                     }
@@ -250,13 +258,8 @@ def pending_trades(request):
                 ],
             }
         )
-
     except Exception as e:
-        print(f"Error in pending_trades: {str(e)}")
-        return Response(
-            {"error": "Internal server error"},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+        return Response({"error": str(e)}, status=500)
 
 
 logger = logging.getLogger(__name__)
@@ -322,5 +325,85 @@ def respond_to_trade(request, trade_id):
 
             return Response({"error": "Invalid action"}, status=400)
 
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def swap_cards(request):
+    try:
+        sender_card_id = request.data.get("sender_card_id")
+        receiver_card_id = request.data.get("receiver_card_id")
+        receiver_id = request.data.get("receiver_id")
+
+        if not sender_card_id or not receiver_card_id or not receiver_id:
+            return Response(
+                {"error": "Sender card, receiver card, and receiver ID are required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Check if the sender owns the sender card
+        sender_card = UserCard.objects.filter(
+            user=request.user, id=sender_card_id
+        ).first()
+        if not sender_card:
+            return Response(
+                {"error": "Sender does not own the sender card."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Check if the receiver exists
+        receiver = User.objects.filter(id=receiver_id).first()
+        if not receiver:
+            return Response(
+                {"error": "Receiver not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Add the receiver's card to the sender's collection
+        UserCard.objects.create(user=request.user, pokemon_id=receiver_card_id)
+
+        # Remove the sender's card from the receiver's collection
+        UserCard.objects.filter(user=receiver, pokemon_id=sender_card_id).delete()
+
+        # Add the sender's card to the receiver's collection
+        UserCard.objects.create(user=receiver, pokemon_id=sender_card_id)
+
+        # Remove the receiver's card from the sender's collection
+        sender_card.delete()
+
+        return Response(
+            {"message": "Cards swapped successfully!"}, status=status.HTTP_200_OK
+        )
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def complete_trade(request):
+    trade_id = request.data.get("trade_id")
+    recipient_card = request.data.get("recipient_card")
+
+    try:
+        trade = Trade.objects.get(id=trade_id)
+
+        UserCard.objects.filter(
+            user=trade.sender, pokemon_id=trade.sender_card
+        ).first().delete()
+
+        UserCard.objects.filter(
+            user=trade.recipient, pokemon_id=recipient_card
+        ).first().delete()
+
+        trade.recipient_card = recipient_card
+        trade.status = "completed"
+        trade.completed_at = now()
+        trade.save()
+
+        return Response({"message": "Trade completed successfully."})
+
+    except Trade.DoesNotExist:
+        return Response({"error": "Trade not found."}, status=404)
     except Exception as e:
         return Response({"error": str(e)}, status=500)

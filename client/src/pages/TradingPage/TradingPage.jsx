@@ -27,6 +27,7 @@ const TradingPage = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [showPopup, setShowPopup] = useState(false); // Controls visibility of the popup
     const [currentTradeId, setCurrentTradeId] = useState(null); // Stores the current trade ID
+    const [trade, setTrade] = useState(null);
     const fetchAllData = async () => {
         const token = localStorage.getItem('token');
         try {
@@ -181,7 +182,7 @@ const TradingPage = () => {
                     [cardId]: {
                         name: data.data.name,
                         image: data.data.images?.small || data.data.images?.large,
-                        // Add other details you might want to display
+
                     }
                 }));
             }
@@ -360,6 +361,7 @@ const TradingPage = () => {
     }, []);
 
     useEffect(() => {
+
         if (pendingTrades.received.length > 0 || pendingTrades.sent.length > 0) {
             const allCardIds = [
                 ...new Set([
@@ -378,61 +380,111 @@ const TradingPage = () => {
 
 
     const handleAcceptClick = (tradeId) => {
-
+        setCurrentTrade(trade)
         setShowPopup(true);
         setCurrentTradeId(tradeId);
         fetchUserCollection();
     };
 
-
     const handleSubmit = async () => {
-        if (!selectedCardId) {
-            alert('Please select a card to trade!');
+        if (!selectedCardId || !currentTradeId) {
+            alert("Please select a card and make sure the trade is valid.");
             return;
         }
 
         try {
-            // Submit the selected card for accepting the trade
-            await acceptTrade(currentTradeId, selectedCardId);
-            setShowPopup(false); // Close the popup after submission
-        } catch (error) {
-            console.error('Trade error:', error);
-        }
-    };
-
-    const acceptTrade = async (tradeId, selectedCardId) => {
-        try {
             const token = localStorage.getItem('token');
-            const url = `http://localhost:8000/api/trades/${tradeId}/respond/`;
 
-            const body = {
-                action: 'accept',
-                card_id: selectedCardId, // Send the selected card ID
-            };
-
-            const response = await fetch(url, {
-                method: 'POST',
+            // Step 1: Fetch trade info
+            const tradeInfoResponse = await fetch('http://localhost:8000/api/trades/pending/', {
+                method: 'GET',
                 headers: {
-                    'Content-Type': 'application/json',
                     'Authorization': `Token ${token}`,
+                    'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(body),
             });
 
-            const data = await response.json();
+            if (!tradeInfoResponse.ok) throw new Error("Failed to fetch trade info");
+            const tradeData = await tradeInfoResponse.json();
 
-            if (!response.ok) {
-                throw new Error(data.error || 'Failed to respond to trade');
-            }
+            const trade = tradeData.received.find(t => t.id === currentTradeId);
+            if (!trade) throw new Error("Trade not found");
+            console.log("Adding ----___________-------")
+            console.log("Sender: " + trade.sender)
+            console.log("Sender Card added: " + selectedCardId)
+            console.log("")
+            console.log("Recipient: " + trade.recipient)
+            console.log("Recipient Card getting added: " + trade.card_id)
 
-            alert(data.message);
-            fetchPendingTrades(); // Refresh pending trades
-            setShowAcceptModal(false); // Close the modal
-        } catch (error) {
-            console.error('Trade error:', error);
-            setTradeError(error.message);
+            await Promise.all([
+                fetch('http://localhost:8000/api/collection/add/', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Token ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        user_id: trade.sender_id,
+                        pokemon_id: selectedCardId,
+                    }),
+                }),
+
+                fetch('http://localhost:8000/api/collection/add/', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Token ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        user_id: trade.recipient_id,
+                        pokemon_id: trade.card_id,
+                    }),
+                }),
+
+
+            ]);
+
+
+            console.log("Deletion ----___________-------")
+            console.log("Sender: " + trade.sender)
+            console.log("Sender Card deleted: " + trade.card_id)
+            console.log("")
+            console.log("Recipient: " + trade.recipient)
+            console.log("Recipient Card getting deleted: " + selectedCardId)
+
+            await Promise.all([
+                fetch('http://localhost:8000/api/collection/delete/', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Token ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        user_id: trade.sender_id,
+                        pokemon_id: trade.card_id,
+                    }),
+                }),
+
+                fetch('http://localhost:8000/api/collection/delete/', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Token ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        user_id: trade.recipient_id,
+                        pokemon_id: selectedCardId,
+                    }),
+                }),
+            ]);
+            alert("Trade completed successfully!");
+        } catch (err) {
+            console.error("Error submitting trade:", err);
+            alert("There was an error processing the trade.");
         }
     };
+
+
 
 
 
@@ -680,8 +732,7 @@ const TradingPage = () => {
                                         key={card.id}
                                         className={`card-item ${selectedCardId === card.id ? 'selected' : ''}`}
                                         onClick={() => {
-                                            console.log("Selecting card:", card.id);
-                                            setSelectedCardId(card.id);
+                                            setSelectedCardId(card.id); // Update the selected card
                                         }}
                                     >
                                         <p className="card-name">
@@ -690,9 +741,11 @@ const TradingPage = () => {
                                                 <span className="selected-badge">✓</span>
                                             )}
                                         </p>
+                                        <img src={card.image} alt={card.name} />
                                     </div>
                                 ))}
                             </div>
+
 
                             <div className="trade-flow-buttons">
                                 <button
@@ -872,7 +925,7 @@ const TradingPage = () => {
                                         <span className="selected-badge">✓</span>
                                     )}
                                 </p>
-                                <img src={card.image} alt={card.name} />
+
                             </div>
                         ))}
                     </div>

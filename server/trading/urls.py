@@ -7,6 +7,7 @@ from .views import (
     create_trade,
     pending_trades,
     respond_to_trade,
+    complete_trade,
 )
 
 urlpatterns = [
@@ -23,4 +24,5 @@ urlpatterns = [
     path("trades/create/", create_trade, name="create-trade"),
     path("trades/pending/", pending_trades, name="pending-trades"),
     path("trades/<int:trade_id>/respond/", respond_to_trade, name="respond_to_trade"),
+    path("trades/complete/", complete_trade, name="complete-trade"),
 ]
