@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -7,6 +7,9 @@ from rest_framework.authtoken.models import Token
 from django.contrib.auth.models import User
 from .models import FriendRequest
 from django.db.models import Q
+from pokemon.models import UserCard
+from .models import Trade
+from rest_framework.decorators import api_view, permission_classes
 
 
 # Create your views here.
@@ -163,3 +166,135 @@ class PendingFriendRequestsView(APIView):
                 "outgoing_requests": outgoing_data,
             }
         )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def create_trade(request):
+    try:
+        recipient_id = request.data.get("recipient_id")
+        card_id = request.data.get("card_id")
+
+        if not recipient_id or not card_id:
+            return Response(
+                {"error": "Recipient ID and Card ID are required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        recipient = User.objects.get(id=recipient_id)
+
+        # Verify sender owns the card
+        if not UserCard.objects.filter(user=request.user, pokemon_id=card_id).exists():
+            return Response(
+                {"error": "You don't own this card"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        trade = Trade.objects.create(
+            sender=request.user,
+            recipient=recipient,
+            sender_card=card_id,
+            status="pending",
+        )
+
+        return Response(
+            {
+                "success": True,
+                "message": "Trade request sent",
+                "trade_id": trade.id,
+                "recipient_username": recipient.username,
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+    except User.DoesNotExist:
+        return Response(
+            {"error": "Recipient not found"}, status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def pending_trades(request):
+    try:
+        received = Trade.objects.filter(
+            recipient=request.user, status="pending"
+        ).select_related("sender")
+
+        sent = Trade.objects.filter(
+            sender=request.user, status="pending"
+        ).select_related("recipient")
+
+        return Response(
+            {
+                "received": [
+                    {
+                        "id": t.id,
+                        "sender": t.sender.username,
+                        "card_id": t.sender_card,
+                        "created_at": t.created_at,
+                    }
+                    for t in received
+                ],
+                "sent": [
+                    {
+                        "id": t.id,
+                        "recipient": t.recipient.username,
+                        "card_id": t.sender_card,
+                        "created_at": t.created_at,
+                    }
+                    for t in sent
+                ],
+            }
+        )
+
+    except Exception as e:
+        print(f"Error in pending_trades: {str(e)}")  # Debug print
+        return Response(
+            {"error": "Internal server error"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(["POST"])
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def respond_to_trade(request, trade_id):
+    trade = get_object_or_404(Trade, id=trade_id)
+    action = request.data.get("action")
+    recipient_card_id = request.data.get("recipient_card_id")
+
+    # Validate user can respond to this trade
+    if request.user not in [trade.sender, trade.recipient]:
+        return Response({"error": "Not authorized"}, status=403)
+
+    if action == "accept":
+        if trade.status == "pending" and request.user == trade.recipient:
+            # First acceptance (by recipient)
+            if not recipient_card_id:
+                return Response({"error": "Please select a card to trade"}, status=400)
+
+            if not UserCard.objects.filter(
+                user=request.user, pokemon_id=recipient_card_id
+            ).exists():
+                return Response({"error": "You don't own this card"}, status=400)
+
+            trade.recipient_card = recipient_card_id
+            trade.status = "awaiting_response"
+            trade.save()
+            return Response({"status": trade.status})
+
+        elif trade.status == "awaiting_response" and request.user == trade.sender:
+            # Final acceptance (by original sender)
+            trade.status = "accepted"
+            trade.save()
+            # TODO: Add card transfer logic here
+            return Response({"status": trade.status})
+
+    elif action == "decline":
+        trade.status = "declined"
+        trade.save()
+        return Response({"status": trade.status})
+
+    return Response({"error": "Invalid action for current trade state"}, status=400)

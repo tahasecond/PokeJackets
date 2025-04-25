@@ -47,3 +47,30 @@ class RequestTrade(models.Model):
 
     def __str__(self):
         return f"{self.requester.username} offers {self.offered_pokemon_name} for {self.listing.pokemon_name}"
+
+
+class Trade(models.Model):
+    PENDING = "pending"
+    ACCEPTED = "accepted"
+    DECLINED = "declined"
+    AWAITING_RESPONSE = "awaiting_response"  # New status
+
+    STATUS_CHOICES = [
+        (PENDING, "Pending"),
+        (ACCEPTED, "Accepted"),
+        (DECLINED, "Declined"),
+        (AWAITING_RESPONSE, "Awaiting Response"),  # When first user accepts
+    ]
+
+    sender = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="sent_trades"
+    )
+    recipient = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="received_trades"
+    )
+    sender_card = models.CharField(max_length=50)  # Card being offered by sender
+    recipient_card = models.CharField(
+        max_length=50, null=True, blank=True
+    )  # Card being offered by recipient
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=PENDING)
+    created_at = models.DateTimeField(auto_now_add=True)

@@ -4,6 +4,8 @@ from .views import (
     FriendRequestResponseView,
     FriendListView,
     PendingFriendRequestsView,
+    create_trade,
+    pending_trades,
 )
 
 urlpatterns = [
@@ -17,4 +19,6 @@ urlpatterns = [
     path(
         "friends/pending/", PendingFriendRequestsView.as_view(), name="pending-friends"
     ),
+    path("trades/create/", create_trade, name="create-trade"),
+    path("trades/pending/", pending_trades, name="pending-trades"),
 ]
