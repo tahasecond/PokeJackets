@@ -100,7 +100,7 @@ const Navbar = () => {
         </Link>
         <Link 
           to="/PokemonStatsPage" 
-          className={`nav-button ${location.pathname === '/PokemonStatsPage' ? 'active' : ''}`}
+          className={`nav-button ${location.pathname === '/PokemonStatsPage' || location.pathname.includes('/pokemon/') ? 'active' : ''}`}
         >
           Stats
         </Link>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './DailyShopPage.css';
 import Navbar from '../../components/Navbar';
 import { useBalance } from '../../context/BalanceContext';
+import { useNavigate } from 'react-router-dom';
 
 const DailyShopPage = () => {
   const [shopItems, setShopItems] = useState([]);
@@ -206,6 +207,7 @@ const DailyShopPage = () => {
 const ShopItem = ({ item, onPurchase }) => {
   const [cardDetails, setCardDetails] = useState(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
   
   useEffect(() => {
     const fetchCardDetails = async () => {
@@ -226,8 +228,17 @@ const ShopItem = ({ item, onPurchase }) => {
     fetchCardDetails();
   }, [item.pokemon_id]);
   
+  const handleCardClick = () => {
+    navigate(`/pokemon/${item.pokemon_id}?source=dailyshop&listingId=${item.id}&price=${item.price}`);
+  };
+  
+  const handlePurchaseClick = (e) => {
+    e.stopPropagation(); // Prevent navigating to details
+    onPurchase(item.id);
+  };
+  
   return (
-    <div className="shop-item">
+    <div className="shop-item" onClick={handleCardClick}>
       <div className="shop-item-image">
         {!loading && cardDetails?.images?.small ? (
           <img 
@@ -250,7 +261,7 @@ const ShopItem = ({ item, onPurchase }) => {
       </div>
       <button 
         className="purchase-button"
-        onClick={() => onPurchase(item.id)}
+        onClick={handlePurchaseClick}
       >
         Purchase
       </button>

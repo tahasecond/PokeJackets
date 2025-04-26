@@ -38,6 +38,9 @@ function App() {
             <Route path="/pokemon/:id" 
               element={isAuthenticated() ? <PokemonStatsPage /> : <Navigate to="/login" />} 
             />
+            <Route path="/pokemon" 
+              element={isAuthenticated() ? <PokemonStatsPage /> : <Navigate to="/login" />} 
+            />
             <Route path="/aigeneration" 
               element={isAuthenticated() ? <AiGenerationPage /> : <Navigate to="/login" />} 
             />

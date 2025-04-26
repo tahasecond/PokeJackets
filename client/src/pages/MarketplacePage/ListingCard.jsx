@@ -33,7 +33,7 @@ const ListingCard = ({ listing, onPurchase }) => {
   }, [listing.pokemon_id]);
 
   const handleCardClick = () => {
-    navigate(`/pokemon/${listing.pokemon_id}`);
+    navigate(`/pokemon/${listing.pokemon_id}?source=marketplace&listingId=${listing.id}&price=${listing.price}`);
   };
   
   const handlePurchase = async (e) => {

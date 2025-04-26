@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import "./PokemonStatsPage.css"
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useLocation, useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
+import { useBalance } from '../../context/BalanceContext';
 
 const PokemonStatsPage = () => {
   const { id } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { balance, updateBalance } = useBalance();
   const [pokemon, setPokemon] = useState([]);
   const [filteredPokemon, setFilteredPokemon] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -13,16 +17,36 @@ const PokemonStatsPage = () => {
   const [selectedPokemon, setSelectedPokemon] = useState(null);
   const [carouselPokemon, setCarouselPokemon] = useState([]);
   const [typingTimeout, setTypingTimeout] = useState(null);
+  const [purchasing, setPurchasing] = useState(false);
+  const [listingId, setListingId] = useState(null);
+  const [price, setPrice] = useState(null);
+  const [sourceType, setSourceType] = useState(null);
 
   useEffect(() => {
     if (id) {
       // If we have an ID parameter, just fetch that specific card
       fetchSinglePokemon(id);
+      
+      // Check if we came from a marketplace or daily shop item
+      const params = new URLSearchParams(location.search);
+      const source = params.get('source');
+      const lid = params.get('listingId');
+      const p = params.get('price');
+      
+      if (source) {
+        setSourceType(source);
+        if (lid) setListingId(lid);
+        if (p) setPrice(parseInt(p, 10));
+      }
     } else {
       // Just load featured/random cards for initial view
       fetchFeaturedPokemon();
+      // Clear search term when on the landing page
+      setSearchTerm('');
+      setSelectedPokemon(null);
+      setFilteredPokemon([]);
     }
-  }, [id]);
+  }, [id, location]);
 
   const fetchSinglePokemon = async (pokemonId) => {
     setLoading(true);
@@ -115,13 +139,11 @@ const PokemonStatsPage = () => {
   };
 
   const handlePokemonSelect = (poke) => {
-    setSelectedPokemon(poke);
-    setSearchTerm(poke.name);
+    navigate(`/pokemon/${poke.id}`);
   };
 
   const handleCarouselSelect = (poke) => {
-    setSelectedPokemon(poke);
-    setSearchTerm(poke.name);
+    navigate(`/pokemon/${poke.id}`);
   };
 
   // Define renderAttack function properly
@@ -192,6 +214,92 @@ const PokemonStatsPage = () => {
     );
   };
 
+  const handlePurchase = async () => {
+    if (purchasing) return;
+    setPurchasing(true);
+    
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('You must be logged in to purchase cards');
+        setPurchasing(false);
+        return;
+      }
+      
+      let response;
+      let endpoint;
+      
+      // Different purchase endpoints based on source
+      switch (sourceType) {
+        case 'dailyshop':
+          endpoint = 'http://127.0.0.1:8000/api/dailyshop/purchase/';
+          response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Token ${token}`
+            },
+            body: JSON.stringify({
+              shop_item_id: listingId
+            })
+          });
+          break;
+        
+        case 'marketplace':
+          endpoint = 'http://127.0.0.1:8000/api/marketplace/buy-listing/';
+          response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Token ${token}`
+            },
+            body: JSON.stringify({
+              listing_id: listingId
+            })
+          });
+          break;
+        
+        default:
+          // Regular purchase
+          endpoint = 'http://127.0.0.1:8000/api/purchase/';
+          response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Token ${token}`
+            },
+            body: JSON.stringify({
+              card_id: id,
+              price: price || 0
+            })
+          });
+          break;
+      }
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        alert(`Purchase failed: ${data.message || 'Unknown error'}`);
+      } else {
+        alert(data.message || 'Card purchased successfully!');
+        
+        // Update the global balance
+        if (data.balance !== undefined || data.new_balance !== undefined) {
+          updateBalance(data.balance || data.new_balance);
+        }
+        
+        // Clear the purchase info since it's been used
+        setSourceType(null);
+        setListingId(null);
+        setPrice(null);
+      }
+    } catch (err) {
+      alert(`Purchase failed: ${err.message || 'Unknown error'}`);
+    } finally {
+      setPurchasing(false);
+    }
+  };
+
   return (
     <div className="main-container">
       <Navbar />
@@ -221,6 +329,20 @@ const PokemonStatsPage = () => {
                 <p><strong>Card #:</strong> {selectedPokemon.number || selectedPokemon.id}</p>
                 {selectedPokemon.flavorText && (
                   <p className="flavor-text">"{selectedPokemon.flavorText}"</p>
+                )}
+                
+                {/* Purchase button conditionally shown if we have source and price */}
+                {sourceType && price && (
+                  <div className="purchase-container">
+                    <p className="card-price"><strong>Price:</strong> PD {price}</p>
+                    <button 
+                      className="purchase-button"
+                      onClick={handlePurchase}
+                      disabled={purchasing}
+                    >
+                      {purchasing ? 'Processing...' : 'Purchase Card'}
+                    </button>
+                  </div>
                 )}
               </div>
             </div>

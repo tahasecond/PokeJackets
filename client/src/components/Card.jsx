@@ -9,7 +9,7 @@ const Card = ({ id, title, price, bodyText, imageSrc, rarity, type, onCardPurcha
   const { updateBalance } = useBalance();
   
   const handleCardClick = () => {
-    navigate(`/pokemon/${id}`);
+    navigate(`/pokemon/${id}?source=browse&price=${price}`);
   };
   
   const handlePurchase = async (e) => {
