@@ -27,7 +27,7 @@ function App() {
               element={isAuthenticated() ? <Navigate to="/" /> : <Login />} 
             />
             <Route path="/" 
-              element={isAuthenticated() ? <HomePage /> : <Navigate to="/login" />} 
+              element={isAuthenticated() ? <Navigate to="/dailyshop" /> : <Navigate to="/login" />} 
             />
             <Route path="/PokemonStatsPage" 
               element={isAuthenticated() ? <PokemonStatsPage /> : <Navigate to="/login" />} 

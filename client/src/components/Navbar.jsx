@@ -75,6 +75,12 @@ const Navbar = () => {
       
       <nav className={`navigation ${mobileMenuOpen ? 'mobile-open' : ''}`}>
         <Link 
+          to="/dailyshop" 
+          className={`nav-button ${location.pathname === '/dailyshop' ? 'active' : ''}`}
+        >
+          Daily Shop
+        </Link>
+        <Link 
           to="/marketplace" 
           className={`nav-button ${location.pathname === '/marketplace' ? 'active' : ''}`}
         >
@@ -103,12 +109,6 @@ const Navbar = () => {
           className={`nav-button ${location.pathname === '/PokemonStatsPage' || location.pathname.includes('/pokemon/') ? 'active' : ''}`}
         >
           Stats
-        </Link>
-        <Link 
-          to="/dailyshop" 
-          className={`nav-button ${location.pathname === '/dailyshop' ? 'active' : ''}`}
-        >
-          Daily Shop
         </Link>
       </nav>
       
