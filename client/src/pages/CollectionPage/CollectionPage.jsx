@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './CollectionPage.css';
 import Navbar from '../../components/Navbar';
 import Card from '../../components/Card';
+import SellModal from './SellModal';
 
 /**
  * Collection Page Component
@@ -24,39 +25,58 @@ const CollectionPage = () => {
   const [collection, setCollection] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [sellModalOpen, setSellModalOpen] = useState(false);
+  const [selectedCard, setSelectedCard] = useState(null);
 
   useEffect(() => {
-    const fetchCollection = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          setError('Authentication required');
-          setLoading(false);
-          return;
-        }
-
-        const response = await fetch('http://127.0.0.1:8000/api/collection/', {
-          headers: {
-            'Authorization': `Token ${token}`
-          }
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch collection');
-        }
-
-        const data = await response.json();
-        setCollection(data.data || []);
-        setLoading(false);
-      } catch (err) {
-        console.error('Error fetching collection:', err);
-        setError('Failed to load your collection. Please try again later.');
-        setLoading(false);
-      }
-    };
-
     fetchCollection();
   }, []);
+
+  const fetchCollection = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError('Authentication required');
+        setLoading(false);
+        return;
+      }
+
+      const response = await fetch('http://127.0.0.1:8000/api/collection/', {
+        headers: {
+          'Authorization': `Token ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch collection');
+      }
+
+      const data = await response.json();
+      setCollection(data.data || []);
+      setLoading(false);
+    } catch (err) {
+      console.error('Error fetching collection:', err);
+      setError('Failed to load your collection. Please try again later.');
+      setLoading(false);
+    }
+  };
+
+  const handleSellClick = (card) => {
+    setSelectedCard(card);
+    setSellModalOpen(true);
+  };
+
+  const handleCloseSellModal = () => {
+    setSellModalOpen(false);
+    setSelectedCard(null);
+  };
+
+  const handleListingCreated = () => {
+    // Refresh the collection after creating a listing
+    fetchCollection();
+    setSellModalOpen(false);
+    setSelectedCard(null);
+  };
 
   return (
     <div className="collection-container">
@@ -77,18 +97,33 @@ const CollectionPage = () => {
         ) : (
           <div className="collection-grid">
             {collection.map(card => (
-              <Card
-                key={card.id}
-                id={card.id}
-                title={card.name}
-                price={0} // Not for sale
-                bodyText={card.flavorText || `${card.name} - ${card.set?.name || 'Collection'}`}
-                imageSrc={card.images?.small}
-                rarity={card.rarity}
-                type={card.types ? card.types[0] : "Normal"}
-              />
+              <div className="card-container" key={card.id}>
+                <Card
+                  id={card.id}
+                  title={card.name}
+                  price={0} // Not for sale in collection view
+                  bodyText={card.flavorText || `${card.name} - ${card.set?.name || 'Collection'}`}
+                  imageSrc={card.images?.small}
+                  rarity={card.rarity}
+                  type={card.types ? card.types[0] : "Normal"}
+                />
+                <button 
+                  className="sell-card-button" 
+                  onClick={() => handleSellClick(card)}
+                >
+                  Sell this Card
+                </button>
+              </div>
             ))}
           </div>
+        )}
+
+        {sellModalOpen && selectedCard && (
+          <SellModal 
+            card={selectedCard} 
+            onClose={handleCloseSellModal} 
+            onListingCreated={handleListingCreated}
+          />
         )}
       </main>
     </div>
