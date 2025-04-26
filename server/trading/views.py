@@ -1,12 +1,9 @@
-from datetime import timezone
 import logging
-from django.shortcuts import get_object_or_404, render
-from django.test import TransactionTestCase
+from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.authtoken.models import Token
 from django.contrib.auth.models import User
 from .models import FriendRequest
 from django.db.models import Q
@@ -403,6 +400,22 @@ def complete_trade(request):
 
         return Response({"message": "Trade completed successfully."})
 
+    except Trade.DoesNotExist:
+        return Response({"error": "Trade not found."}, status=404)
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def delete_trade(request):
+    trade_id = request.data.get("trade_id")
+    try:
+        trade = Trade.objects.get(id=trade_id)
+
+        # Delete the trade record
+        trade.delete()
+
+        return Response({"message": "Trade deleted successfully."})
     except Trade.DoesNotExist:
         return Response({"error": "Trade not found."}, status=404)
     except Exception as e:

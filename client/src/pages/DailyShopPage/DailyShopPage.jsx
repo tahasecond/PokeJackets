@@ -55,7 +55,7 @@ const DailyShopPage = () => {
         return;
       }
 
-      const response = await fetch('http://127.0.0.1:8000/api/dailyshop/', {
+      const response = await fetch('https://pokejackets-93oe.onrender.com/api/dailyshop/', {
         headers: {
           'Authorization': `Token ${token}`
         }
@@ -88,7 +88,7 @@ const DailyShopPage = () => {
         return;
       }
       
-      const response = await fetch('http://127.0.0.1:8000/api/dailyshop/purchase/', {
+      const response = await fetch('https://pokejackets-93oe.onrender.com/api/dailyshop/purchase/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -134,7 +134,7 @@ const DailyShopPage = () => {
         return;
       }
       
-      const response = await fetch('http://127.0.0.1:8000/api/dailyshop/refresh/', {
+      const response = await fetch('https://pokejackets-93oe.onrender.com/api/dailyshop/refresh/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -213,7 +213,7 @@ const ShopItem = ({ item, onPurchase }) => {
     const fetchCardDetails = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`http://127.0.0.1:8000/api/pokemon/${item.pokemon_id}/`);
+        const response = await fetch(`https://pokejackets-93oe.onrender.com/api/pokemon/${item.pokemon_id}/`);
         if (response.ok) {
           const data = await response.json();
           setCardDetails(data.data);

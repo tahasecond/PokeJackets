@@ -83,7 +83,7 @@ const PokemonStatsPage = () => {
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      const response = await fetch('http://127.0.0.1:8000/api/collection/', {
+      const response = await fetch('https://pokejackets-93oe.onrender.com/api/collection/', {
         headers: {
           'Authorization': `Token ${token}`
         }
@@ -104,7 +104,7 @@ const PokemonStatsPage = () => {
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      const response = await fetch('http://127.0.0.1:8000/api/marketplace/my-listings/', {
+      const response = await fetch('https://pokejackets-93oe.onrender.com/api/marketplace/my-listings/', {
         headers: {
           'Authorization': `Token ${token}`
         }
@@ -150,7 +150,7 @@ const PokemonStatsPage = () => {
         return;
       }
 
-      const response = await fetch('http://127.0.0.1:8000/api/marketplace/cancel-listing/', {
+      const response = await fetch('https://pokejackets-93oe.onrender.com/api/marketplace/cancel-listing/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -181,8 +181,8 @@ const PokemonStatsPage = () => {
     try {
       // Determine which API endpoint to use based on the card ID
       const fetchUrl = pokemonId.startsWith('ai-')
-        ? `http://127.0.0.1:8000/api/aigen/cards/${pokemonId}/`  // AI-generated card
-        : `http://127.0.0.1:8000/api/pokemon/${pokemonId}/`;     // Regular Pokemon card
+        ? `https://pokejackets-93oe.onrender.com/api/aigen/cards/${pokemonId}/`  // AI-generated card
+        : `https://pokejackets-93oe.onrender.com/api/pokemon/${pokemonId}/`;     // Regular Pokemon card
         
       const response = await fetch(fetchUrl);
       if (!response.ok) {
@@ -205,7 +205,7 @@ const PokemonStatsPage = () => {
     setLoading(true);
     try {
       // Load just the first page of Pokemon for the carousel
-      const response = await fetch('http://127.0.0.1:8000/api/pokemon/?page=1&pageSize=20');
+      const response = await fetch('https://pokejackets-93oe.onrender.com/api/pokemon/?page=1&pageSize=20');
       if (!response.ok) {
         throw new Error('Failed to fetch featured Pokemon');
       }
@@ -229,7 +229,7 @@ const PokemonStatsPage = () => {
     setLoadingMore(true);
     try {
       const nextPage = page + 1;
-      const response = await fetch(`http://127.0.0.1:8000/api/pokemon/?page=${nextPage}&pageSize=20`);
+      const response = await fetch(`https://pokejackets-93oe.onrender.com/api/pokemon/?page=${nextPage}&pageSize=20`);
       
       if (!response.ok) {
         throw new Error('Failed to fetch more Pokemon');
@@ -293,7 +293,7 @@ const PokemonStatsPage = () => {
     setSearchLoading(true);
     try {
       // Use server-side search with the query parameter
-      const response = await fetch(`http://127.0.0.1:8000/api/pokemon/?q=${query}&pageSize=20`);
+      const response = await fetch(`https://pokejackets-93oe.onrender.com/api/pokemon/?q=${query}&pageSize=20`);
       if (!response.ok) {
         throw new Error('Failed to search Pokemon');
       }
@@ -403,7 +403,7 @@ const PokemonStatsPage = () => {
       // Different purchase endpoints based on source
       switch (sourceType) {
         case 'dailyshop':
-          endpoint = 'http://127.0.0.1:8000/api/dailyshop/purchase/';
+          endpoint = 'https://pokejackets-93oe.onrender.com/api/dailyshop/purchase/';
           response = await fetch(endpoint, {
             method: 'POST',
             headers: {
@@ -417,7 +417,7 @@ const PokemonStatsPage = () => {
           break;
         
         case 'marketplace':
-          endpoint = 'http://127.0.0.1:8000/api/marketplace/buy-listing/';
+          endpoint = 'https://pokejackets-93oe.onrender.com/api/marketplace/buy-listing/';
           response = await fetch(endpoint, {
             method: 'POST',
             headers: {
@@ -432,7 +432,7 @@ const PokemonStatsPage = () => {
         
         default:
           // Regular purchase
-          endpoint = 'http://127.0.0.1:8000/api/purchase/';
+          endpoint = 'https://pokejackets-93oe.onrender.com/api/purchase/';
           response = await fetch(endpoint, {
             method: 'POST',
             headers: {

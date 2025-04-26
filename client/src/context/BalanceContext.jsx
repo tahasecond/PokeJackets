@@ -22,7 +22,7 @@ export const BalanceProvider = ({ children }) => {
         return;
       }
 
-      const response = await fetch('http://127.0.0.1:8000/api/user/balance/', {
+      const response = await fetch('https://pokejackets-93oe.onrender.com/api/user/balance/', {
         headers: {
           'Authorization': `Token ${token}`
         }

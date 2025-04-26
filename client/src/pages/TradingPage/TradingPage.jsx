@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './tradingpage.css';
+import './TradingPage.css';
 import Navbar from '../../components/Navbar';
 
 const TradingPage = () => {
@@ -32,7 +32,7 @@ const TradingPage = () => {
         const token = localStorage.getItem('token');
         try {
 
-            const userRes = await fetch('http://localhost:8000/api/user/profile/', {
+            const userRes = await fetch('https://pokejackets-93oe.onrender.com/api/user/profile/', {
                 headers: { 'Authorization': `Token ${token}` }
             });
             if (userRes.ok) {
@@ -42,10 +42,10 @@ const TradingPage = () => {
 
 
             const [friendsRes, pendingRes] = await Promise.all([
-                fetch('http://localhost:8000/api/friends/list/', {
+                fetch('https://pokejackets-93oe.onrender.com/api/friends/list/', {
                     headers: { 'Authorization': `Token ${token}` }
                 }),
-                fetch('http://localhost:8000/api/friends/pending/', {
+                fetch('https://pokejackets-93oe.onrender.com/api/friends/pending/', {
                     headers: { 'Authorization': `Token ${token}` }
                 })
             ]);
@@ -72,7 +72,7 @@ const TradingPage = () => {
     const sendFriendRequest = async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch('http://localhost:8000/api/friends/request/', {
+            const response = await fetch('https://pokejackets-93oe.onrender.com/api/friends/request/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -106,7 +106,7 @@ const TradingPage = () => {
     const handleAccept = async (requestId) => {
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`http://localhost:8000/api/friends/respond/${requestId}/`, {
+            const response = await fetch(`https://pokejackets-93oe.onrender.com/api/friends/respond/${requestId}/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -128,7 +128,7 @@ const TradingPage = () => {
     const handleDecline = async (requestId) => {
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`http://localhost:8000/api/friends/respond/${requestId}/`, {
+            const response = await fetch(`https://pokejackets-93oe.onrender.com/api/friends/respond/${requestId}/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -150,7 +150,7 @@ const TradingPage = () => {
     const handleCancelRequest = async (requestId) => {
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`http://localhost:8000/api/friends/respond/${requestId}/`, {
+            const response = await fetch(`https://pokejackets-93oe.onrender.com/api/friends/respond/${requestId}/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -194,7 +194,7 @@ const TradingPage = () => {
     const fetchUserCollection = async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch('http://localhost:8000/api/collection/', {
+            const response = await fetch('https://pokejackets-93oe.onrender.com/api/collection/', {
                 headers: {
                     'Authorization': `Token ${token}`,
                     'Content-Type': 'application/json'
@@ -241,7 +241,7 @@ const TradingPage = () => {
 
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch('http://localhost:8000/api/trades/create/', {
+            const response = await fetch('https://pokejackets-93oe.onrender.com/api/trades/create/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -283,7 +283,7 @@ const TradingPage = () => {
         try {
             const token = localStorage.getItem('token');
 
-            const url = `http://localhost:8000/api/trades/${tradeId}/respond/`;
+            const url = `https://pokejackets-93oe.onrender.com/api/trades/${tradeId}/respond/`;
 
             // For GET requests (viewing trade details)
             if (action === 'view') {
@@ -338,7 +338,7 @@ const TradingPage = () => {
     const fetchPendingTrades = async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch('http://localhost:8000/api/trades/pending/', {
+            const response = await fetch('https://pokejackets-93oe.onrender.com/api/trades/pending/', {
                 headers: { 'Authorization': `Token ${token}` }
             });
 
@@ -396,7 +396,7 @@ const TradingPage = () => {
             const token = localStorage.getItem('token');
 
             // Step 1: Fetch trade info
-            const tradeInfoResponse = await fetch('http://localhost:8000/api/trades/pending/', {
+            const tradeInfoResponse = await fetch('https://pokejackets-93oe.onrender.com/api/trades/pending/', {
                 method: 'GET',
                 headers: {
                     'Authorization': `Token ${token}`,
@@ -417,7 +417,7 @@ const TradingPage = () => {
             console.log("Recipient Card getting added: " + trade.card_id)
 
             await Promise.all([
-                fetch('http://localhost:8000/api/collection/add/', {
+                fetch('https://pokejackets-93oe.onrender.com/api/collection/add/', {
                     method: 'POST',
                     headers: {
                         'Authorization': `Token ${token}`,
@@ -429,7 +429,7 @@ const TradingPage = () => {
                     }),
                 }),
 
-                fetch('http://localhost:8000/api/collection/add/', {
+                fetch('https://pokejackets-93oe.onrender.com/api/collection/add/', {
                     method: 'POST',
                     headers: {
                         'Authorization': `Token ${token}`,
@@ -443,7 +443,6 @@ const TradingPage = () => {
 
 
             ]);
-
 
             console.log("Deletion ----___________-------")
             console.log("Sender: " + trade.sender)
@@ -453,7 +452,7 @@ const TradingPage = () => {
             console.log("Recipient Card getting deleted: " + selectedCardId)
 
             await Promise.all([
-                fetch('http://localhost:8000/api/collection/delete/', {
+                fetch('https://pokejackets-93oe.onrender.com/api/collection/delete/', {
                     method: 'POST',
                     headers: {
                         'Authorization': `Token ${token}`,
@@ -465,7 +464,7 @@ const TradingPage = () => {
                     }),
                 }),
 
-                fetch('http://localhost:8000/api/collection/delete/', {
+                fetch('https://pokejackets-93oe.onrender.com/api/collection/delete/', {
                     method: 'POST',
                     headers: {
                         'Authorization': `Token ${token}`,
@@ -477,6 +476,7 @@ const TradingPage = () => {
                     }),
                 }),
             ]);
+            handleDeleteTrade(currentTradeId);
             alert("Trade completed successfully!");
         } catch (err) {
             console.error("Error submitting trade:", err);
@@ -484,8 +484,39 @@ const TradingPage = () => {
         }
     };
 
+    const handleDeleteTrade = async (tradeId) => {
+        try {
+            const token = localStorage.getItem('token');
+
+            // Hard delete the trade from the backend
+            const response = await fetch('https://pokejackets-93oe.onrender.com/api/trades/delete/', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Token ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ trade_id: currentTradeId }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to delete trade');
+            }
 
 
+            setPendingTrades({ received: [], sent: [] });
+
+
+            fetchPendingTrades();
+
+            alert("Trade Successful!");
+
+        } catch (err) {
+            console.error("Error deleting trade:", err);
+            alert(`Error: ${err.message || 'Unknown error'}`);
+        }
+    };
 
 
     return (

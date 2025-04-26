@@ -26,7 +26,7 @@ const Card = ({ id, title, price, bodyText, imageSrc, rarity, type, onCardPurcha
         return;
       }
       
-      const response = await fetch('http://127.0.0.1:8000/api/purchase/', {
+      const response = await fetch('https://pokejackets-93oe.onrender.com/api/purchase/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

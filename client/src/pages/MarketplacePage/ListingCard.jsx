@@ -18,7 +18,7 @@ const ListingCard = ({ listing, onPurchase }) => {
         const token = localStorage.getItem('token');
         if (!token) return;
 
-        const response = await fetch('http://127.0.0.1:8000/api/user/profile/', {
+        const response = await fetch('https://pokejackets-93oe.onrender.com/api/user/profile/', {
           headers: {
             'Authorization': `Token ${token}`
           }
@@ -43,8 +43,8 @@ const ListingCard = ({ listing, onPurchase }) => {
         // Determine which API endpoint to use based on the card ID
         const isAiGenerated = listing.pokemon_id.startsWith('ai-');
         const fetchUrl = isAiGenerated
-          ? `http://127.0.0.1:8000/api/aigen/cards/${listing.pokemon_id}/`
-          : `http://127.0.0.1:8000/api/pokemon/${listing.pokemon_id}/`;
+          ? `https://pokejackets-93oe.onrender.com/api/aigen/cards/${listing.pokemon_id}/`
+          : `https://pokejackets-93oe.onrender.com/api/pokemon/${listing.pokemon_id}/`;
         
         const response = await fetch(fetchUrl);
         

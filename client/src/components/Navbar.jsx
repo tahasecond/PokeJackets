@@ -25,7 +25,7 @@ const Navbar = () => {
   }, [location.pathname]);
   
   const fetchUserProfile = (token) => {
-    fetch('http://127.0.0.1:8000/api/user/profile/', {
+    fetch('https://pokejackets-93oe.onrender.com/api/user/profile/', {
       headers: {
         'Authorization': `Token ${token}`
       }

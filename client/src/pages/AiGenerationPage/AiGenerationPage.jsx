@@ -44,7 +44,7 @@ const AiGenerationPage = () => {
 
   const loadRecentCards = () => {
     console.log("Loading recent cards");
-    fetch('http://127.0.0.1:8000/api/aigen/recent/')
+    fetch('https://pokejackets-93oe.onrender.com/api/aigen/recent/')
       .then(response => response.json())
       .then(data => {
         console.log("Received recent cards:", data);
@@ -67,7 +67,7 @@ const AiGenerationPage = () => {
     console.log("Generating Pokémon with API...");
     
     // Call the backend API
-    fetch('http://127.0.0.1:8000/api/aigen/generate/', {
+    fetch('https://pokejackets-93oe.onrender.com/api/aigen/generate/', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -143,7 +143,7 @@ const AiGenerationPage = () => {
           return;
         }
         
-        const response = await fetch('http://127.0.0.1:8000/api/aigen/save-to-collection/', {
+        const response = await fetch('https://pokejackets-93oe.onrender.com/api/aigen/save-to-collection/', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

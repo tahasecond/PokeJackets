@@ -16,7 +16,7 @@ const MarketplacePage = () => {
         const token = localStorage.getItem('token');
         if (!token) return;
         
-        const response = await fetch('http://127.0.0.1:8000/api/user/balance/', {
+        const response = await fetch('https://pokejackets-93oe.onrender.com/api/user/balance/', {
           headers: {
             'Authorization': `Token ${token}`
           }
@@ -42,7 +42,7 @@ const MarketplacePage = () => {
   const fetchListings = async () => {
     try {
       setListingsLoading(true);
-      const response = await fetch('http://127.0.0.1:8000/api/marketplace/listings/');
+      const response = await fetch('https://pokejackets-93oe.onrender.com/api/marketplace/listings/');
       
       if (!response.ok) {
         throw new Error('Failed to fetch listings');
@@ -65,7 +65,7 @@ const MarketplacePage = () => {
         return;
       }
 
-      const response = await fetch('http://127.0.0.1:8000/api/marketplace/buy-listing/', {
+      const response = await fetch('https://pokejackets-93oe.onrender.com/api/marketplace/buy-listing/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

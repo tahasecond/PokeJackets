@@ -45,7 +45,7 @@ const Login = () => {
         <div className = "login-header">
           <h1>Welcome to PokeJackets!</h1>
           Don't have an account? <Link to="/register">Register</Link>
-          Forgot your password? <Link to="http://localhost:8000/api/reset_password">Reset Password</Link>
+          Forgot your password? <Link to="https://pokejackets-93oe.onrender.com/api/reset_password">Reset Password</Link>
         </div>
 
         <div className="login-container">

@@ -1,23 +1,17 @@
-import statistics
 from django.http import JsonResponse
 from mysite.settings import API_KEY
 import requests
-from django.contrib.auth.decorators import login_required
 from .models import UserCard
 from django.contrib.auth.models import User
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.authtoken.models import Token
 from django.db import transaction
 from marketplace.models import User_wallet
 import json
 from decimal import Decimal
-from django.urls import reverse
-from django.shortcuts import redirect
 from django.core.cache import cache
 import hashlib
 from rest_framework.response import Response
-from rest_framework import status
 
 # Create your views here.
 
@@ -88,7 +82,7 @@ def user_collection(request):
             if pokemon_id.startswith("ai-"):
                 # For AI-generated cards, fetch from our local endpoint
                 ai_response = requests.get(
-                    f"http://localhost:8000/api/aigen/cards/{pokemon_id}/",
+                    f"https://pokejackets-93oe.onrender.com/api/aigen/cards/{pokemon_id}/",
                     headers=headers,
                 )
                 if ai_response.status_code == 200:

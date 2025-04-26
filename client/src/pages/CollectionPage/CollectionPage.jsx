@@ -45,7 +45,7 @@ const CollectionPage = () => {
         return;
       }
 
-      const response = await fetch('http://127.0.0.1:8000/api/collection/', {
+      const response = await fetch('https://pokejackets-93oe.onrender.com/api/collection/', {
         headers: {
           'Authorization': `Token ${token}`
         }
@@ -70,7 +70,7 @@ const CollectionPage = () => {
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      const response = await fetch('http://127.0.0.1:8000/api/marketplace/my-listings/', {
+      const response = await fetch('https://pokejackets-93oe.onrender.com/api/marketplace/my-listings/', {
         headers: {
           'Authorization': `Token ${token}`
         }
@@ -115,7 +115,7 @@ const CollectionPage = () => {
         return;
       }
 
-      const response = await fetch('http://127.0.0.1:8000/api/marketplace/cancel-listing/', {
+      const response = await fetch('https://pokejackets-93oe.onrender.com/api/marketplace/cancel-listing/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

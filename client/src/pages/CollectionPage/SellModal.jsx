@@ -26,7 +26,7 @@ const SellModal = ({ card, onClose, onListingCreated }) => {
         throw new Error('Authentication required');
       }
       
-      const response = await fetch('http://127.0.0.1:8000/api/marketplace/create-listing/', {
+      const response = await fetch('https://pokejackets-93oe.onrender.com/api/marketplace/create-listing/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
