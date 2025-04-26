@@ -104,6 +104,12 @@ const Navbar = () => {
         >
           Stats
         </Link>
+        <Link 
+          to="/dailyshop" 
+          className={`nav-button ${location.pathname === '/dailyshop' ? 'active' : ''}`}
+        >
+          Daily Shop
+        </Link>
       </nav>
       
       <div className="user-info">

@@ -10,6 +10,7 @@ import Register from './pages/Register/Register';
 import Login from './pages/Login/Login';
 import TradingPage from './pages/TradingPage/TradingPage';
 import { BalanceProvider } from './context/BalanceContext';
+import DailyShopPage from './pages/DailyShopPage/DailyShopPage';
 
 function App() {
   const isAuthenticated = () => !!localStorage.getItem('token');
@@ -46,6 +47,7 @@ function App() {
             <Route path="/collection" 
               element={isAuthenticated() ? <CollectionPage /> : <Navigate to="/login" />} 
             />
+            <Route path="/dailyshop" element={<DailyShopPage />} />
           </Routes>
         </Router>
       </BalanceProvider>

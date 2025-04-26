@@ -27,6 +27,7 @@ urlpatterns = [
     path("api/", include("users.urls")),
     path("api/", include("trading.urls")),
     path("api/marketplace/", include("marketplace.urls")),
+    path("api/dailyshop/", include("shop.urls")),
 ]
 
 # Add media URL in development
