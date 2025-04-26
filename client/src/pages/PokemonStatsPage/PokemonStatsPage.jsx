@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import "./PokemonStatsPage.css"
 import { Link, useParams, useLocation, useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
@@ -21,6 +21,10 @@ const PokemonStatsPage = () => {
   const [listingId, setListingId] = useState(null);
   const [price, setPrice] = useState(null);
   const [sourceType, setSourceType] = useState(null);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const observer = useRef();
 
   useEffect(() => {
     if (id) {
@@ -45,6 +49,9 @@ const PokemonStatsPage = () => {
       setSearchTerm('');
       setSelectedPokemon(null);
       setFilteredPokemon([]);
+      // Reset pagination for infinite scroll
+      setPage(1);
+      setHasMore(true);
     }
   }, [id, location]);
 
@@ -94,6 +101,49 @@ const PokemonStatsPage = () => {
       setLoading(false);
     }
   };
+
+  const fetchMorePokemon = async () => {
+    if (loadingMore || !hasMore || searchTerm.trim()) return;
+    
+    setLoadingMore(true);
+    try {
+      const nextPage = page + 1;
+      const response = await fetch(`http://127.0.0.1:8000/api/pokemon/?page=${nextPage}&pageSize=20`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch more Pokemon');
+      }
+      
+      const data = await response.json();
+      const newPokemon = data.data;
+      
+      if (newPokemon.length === 0) {
+        setHasMore(false);
+      } else {
+        setCarouselPokemon(prev => [...prev, ...newPokemon]);
+        setPage(nextPage);
+      }
+    } catch (error) {
+      console.error('Error fetching more Pokemon:', error);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  // Intersection Observer to detect when user scrolls to bottom
+  const lastCardElementRef = useCallback(node => {
+    if (loadingMore) return;
+    
+    if (observer.current) observer.current.disconnect();
+    
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore && !searchTerm.trim()) {
+        fetchMorePokemon();
+      }
+    }, { threshold: 0.5 });
+    
+    if (node) observer.current.observe(node);
+  }, [loadingMore, hasMore, searchTerm, fetchMorePokemon]);
 
   const handleSearch = (e) => {
     const value = e.target.value;
@@ -426,18 +476,43 @@ const PokemonStatsPage = () => {
         ) : (
           <div className="carousel-container">
             <h3>Featured Pokémon Cards</h3>
-            <div className="carousel">
-              {carouselPokemon.map((poke) => (
-                <div 
-                  key={poke.id} 
-                  className="carousel-card"
-                  onClick={() => handleCarouselSelect(poke)}
-                >
-                  <img src={poke.images.small} alt={poke.name} className="carousel-image" />
-                  <p>{poke.name}</p>
-                  <p className="card-set">{poke.set.name}</p>
-                </div>
-              ))}
+            <div className="infinite-scroll-container">
+              <div className="pokemon-grid">
+                {carouselPokemon.map((poke, index) => {
+                  if (carouselPokemon.length === index + 1) {
+                    return (
+                      <div 
+                        ref={lastCardElementRef}
+                        key={poke.id} 
+                        className="pokemon-card"
+                        onClick={() => handleCarouselSelect(poke)}
+                      >
+                        <img src={poke.images.small} alt={poke.name} className="grid-image" />
+                        <p>{poke.name}</p>
+                        <p className="card-set">{poke.set?.name || "Unknown"}</p>
+                      </div>
+                    );
+                  } else {
+                    return (
+                      <div 
+                        key={poke.id} 
+                        className="pokemon-card"
+                        onClick={() => handleCarouselSelect(poke)}
+                      >
+                        <img src={poke.images.small} alt={poke.name} className="grid-image" />
+                        <p>{poke.name}</p>
+                        <p className="card-set">{poke.set?.name || "Unknown"}</p>
+                      </div>
+                    );
+                  }
+                })}
+              </div>
+              {loadingMore && (
+                <div className="loading-more">Loading more cards...</div>
+              )}
+              {!hasMore && !loadingMore && carouselPokemon.length > 0 && (
+                <div className="end-message">You've seen all available cards</div>
+              )}
             </div>
           </div>
         )}
