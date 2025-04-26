@@ -8,13 +8,45 @@ const ListingCard = ({ listing, onPurchase }) => {
   const [cardDetails, setCardDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState(false);
+  const [isOwner, setIsOwner] = useState(false);
   const { updateBalance } = useBalance();
+
+  // Check if current user is the seller
+  useEffect(() => {
+    const checkOwnership = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        const response = await fetch('http://127.0.0.1:8000/api/user/profile/', {
+          headers: {
+            'Authorization': `Token ${token}`
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          // Check if logged in user is the seller
+          setIsOwner(data.username === listing.seller);
+        }
+      } catch (error) {
+        console.error('Error checking ownership:', error);
+      }
+    };
+
+    checkOwnership();
+  }, [listing.seller]);
 
   useEffect(() => {
     const fetchCardDetails = async () => {
       try {
-        // Get card details from Pokemon TCG API
-        const response = await fetch(`https://api.pokemontcg.io/v2/cards/${listing.pokemon_id}`);
+        // Determine which API endpoint to use based on the card ID
+        const isAiGenerated = listing.pokemon_id.startsWith('ai-');
+        const fetchUrl = isAiGenerated
+          ? `http://127.0.0.1:8000/api/aigen/cards/${listing.pokemon_id}/`
+          : `http://127.0.0.1:8000/api/pokemon/${listing.pokemon_id}/`;
+        
+        const response = await fetch(fetchUrl);
         
         if (!response.ok) {
           throw new Error('Failed to fetch card details');
@@ -33,7 +65,12 @@ const ListingCard = ({ listing, onPurchase }) => {
   }, [listing.pokemon_id]);
 
   const handleCardClick = () => {
-    navigate(`/pokemon/${listing.pokemon_id}?source=marketplace&listingId=${listing.id}&price=${listing.price}`);
+    if (isOwner) {
+      // If owner, navigate to the card with owner=true parameter
+      navigate(`/pokemon/${listing.pokemon_id}?source=marketplace&listingId=${listing.id}&price=${listing.price}&owner=true`);
+    } else {
+      navigate(`/pokemon/${listing.pokemon_id}?source=marketplace&listingId=${listing.id}&price=${listing.price}`);
+    }
   };
   
   const handlePurchase = async (e) => {
@@ -67,6 +104,9 @@ const ListingCard = ({ listing, onPurchase }) => {
     );
   }
 
+  // Helper to determine if a card is AI-generated based on ID or source
+  const isAiGenerated = listing.pokemon_id.startsWith('ai-') || cardDetails?.source === 'ai';
+
   return (
     <div className="listing-card" onClick={handleCardClick}>
       <div className="listing-card-image">
@@ -75,10 +115,19 @@ const ListingCard = ({ listing, onPurchase }) => {
             src={cardDetails.images.small} 
             alt={listing.pokemon_name} 
             className="listing-pokemon-image"
+            onError={(e) => {
+              console.error('Image failed to load:', e);
+              e.target.onerror = null;
+              e.target.src = 'https://via.placeholder.com/245x342?text=Card+Image+Not+Available';
+            }}
           />
         ) : (
-          <div className="placeholder-image"></div>
+          <div className="placeholder-image">
+            <p>Image not available</p>
+          </div>
         )}
+        {isAiGenerated && <div className="ai-generated-badge">AI Generated</div>}
+        {isOwner && <div className="owner-badge">Your Listing</div>}
       </div>
       <div className="listing-card-content">
         <p className="listing-card-title">{listing.pokemon_name}</p>
@@ -93,13 +142,17 @@ const ListingCard = ({ listing, onPurchase }) => {
           <p className="listing-card-notes">{listing.notes}</p>
         )}
       </div>
-      <button 
-        className="buy-listing-btn"
-        onClick={handlePurchase}
-        disabled={purchasing}
-      >
-        {purchasing ? 'Buying...' : 'Buy Now'}
-      </button>
+      {!isOwner ? (
+        <button 
+          className="buy-listing-btn"
+          onClick={handlePurchase}
+          disabled={purchasing}
+        >
+          {purchasing ? 'Buying...' : 'Buy Now'}
+        </button>
+      ) : (
+        <div className="own-listing-notice">Your card is listed for sale</div>
+      )}
     </div>
   );
 };

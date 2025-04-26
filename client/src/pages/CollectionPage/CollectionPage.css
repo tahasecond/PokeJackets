@@ -89,3 +89,74 @@
     font-size: 1.5rem;
   }
 }
+
+.card-actions {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.view-stats-button {
+  padding: 8px 12px;
+  background-color: #6890F0;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s;
+}
+
+.view-stats-button:hover {
+  background-color: #5880E0;
+}
+
+.listing-status {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 6px;
+  padding: 8px;
+  background-color: rgba(104, 144, 240, 0.1);
+  border-radius: 4px;
+  border: 1px solid rgba(104, 144, 240, 0.3);
+}
+
+.listed-price {
+  margin: 0;
+  font-weight: bold;
+  color: #555;
+  text-align: center;
+}
+
+.cancel-listing-button {
+  padding: 8px 12px;
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s;
+}
+
+.cancel-listing-button:hover {
+  background-color: #c0392b;
+}
+
+.sell-card-button {
+  padding: 8px 12px;
+  background-color: #2ecc71;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s;
+}
+
+.sell-card-button:hover {
+  background-color: #27ae60;
+}

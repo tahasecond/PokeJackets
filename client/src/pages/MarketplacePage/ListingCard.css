@@ -99,3 +99,60 @@
 .loading-indicator {
   color: #666;
 }
+
+.placeholder-image {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f0f0f0;
+  color: #999;
+  text-align: center;
+  padding: 20px;
+}
+
+.placeholder-image p {
+  margin: 0;
+  font-size: 14px;
+}
+
+/* Styles for owner elements */
+
+.owner-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background-color: rgba(52, 152, 219, 0.8); /* Blue with transparency */
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: bold;
+  text-transform: uppercase;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.own-listing-notice {
+  padding: 10px;
+  background-color: #f2f2f2;
+  color: #666;
+  text-align: center;
+  font-weight: bold;
+  font-size: 14px;
+  border-top: 1px solid #ddd;
+}
+
+.ai-generated-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: rgba(138, 43, 226, 0.8); /* Purple with transparency */
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: bold;
+  text-transform: uppercase;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}

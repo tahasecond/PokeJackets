@@ -3,6 +3,7 @@ import './CollectionPage.css';
 import Navbar from '../../components/Navbar';
 import Card from '../../components/Card';
 import SellModal from './SellModal';
+import { useNavigate } from 'react-router-dom';
 
 /**
  * Collection Page Component
@@ -27,9 +28,12 @@ const CollectionPage = () => {
   const [error, setError] = useState(null);
   const [sellModalOpen, setSellModalOpen] = useState(false);
   const [selectedCard, setSelectedCard] = useState(null);
+  const [activeListings, setActiveListings] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchCollection();
+    fetchUserListings();
   }, []);
 
   const fetchCollection = async () => {
@@ -61,6 +65,30 @@ const CollectionPage = () => {
     }
   };
 
+  const fetchUserListings = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch('http://127.0.0.1:8000/api/marketplace/my-listings/', {
+        headers: {
+          'Authorization': `Token ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch user listings');
+      }
+
+      const data = await response.json();
+      // Filter to only active listings
+      const active = data.listings ? data.listings.filter(listing => listing.is_active) : [];
+      setActiveListings(active);
+    } catch (err) {
+      console.error('Error fetching user listings:', err);
+    }
+  };
+
   const handleSellClick = (card) => {
     setSelectedCard(card);
     setSellModalOpen(true);
@@ -72,10 +100,57 @@ const CollectionPage = () => {
   };
 
   const handleListingCreated = () => {
-    // Refresh the collection after creating a listing
+    // Refresh both the collection and the listings after creating a listing
     fetchCollection();
+    fetchUserListings();
     setSellModalOpen(false);
     setSelectedCard(null);
+  };
+
+  const handleCancelListing = async (listingId) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('Authentication required');
+        return;
+      }
+
+      const response = await fetch('http://127.0.0.1:8000/api/marketplace/cancel-listing/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Token ${token}`
+        },
+        body: JSON.stringify({
+          listing_id: listingId
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.message || 'Failed to cancel listing');
+      } else {
+        alert('Listing has been removed from the marketplace.');
+        // Refresh listings and collection after cancelling
+        fetchUserListings();
+        fetchCollection();
+      }
+    } catch (err) {
+      alert(`Error: ${err.message}`);
+    }
+  };
+
+  const isCardListed = (cardId) => {
+    return activeListings.some(listing => listing.pokemon_id === cardId);
+  };
+
+  const getListingDetails = (cardId) => {
+    return activeListings.find(listing => listing.pokemon_id === cardId);
+  };
+
+  const handleViewStats = (card) => {
+    navigate(`/pokemon/${card.id}?source=collection&owner=true`);
   };
 
   return (
@@ -96,25 +171,51 @@ const CollectionPage = () => {
           </div>
         ) : (
           <div className="collection-grid">
-            {collection.map(card => (
-              <div className="card-container" key={card.id}>
-                <Card
-                  id={card.id}
-                  title={card.name}
-                  price={0} // Not for sale in collection view
-                  bodyText={card.flavorText || `${card.name} - ${card.set?.name || 'Collection'}`}
-                  imageSrc={card.images?.small}
-                  rarity={card.rarity}
-                  type={card.types ? card.types[0] : "Normal"}
-                />
-                <button 
-                  className="sell-card-button" 
-                  onClick={() => handleSellClick(card)}
-                >
-                  Sell this Card
-                </button>
-              </div>
-            ))}
+            {collection.map(card => {
+              const isListed = isCardListed(card.id);
+              const listingDetails = isListed ? getListingDetails(card.id) : null;
+              
+              return (
+                <div className="card-container" key={card.id}>
+                  <Card
+                    id={card.id}
+                    title={card.name}
+                    price={0} // Not for sale in collection view
+                    bodyText={card.flavorText || `${card.name} - ${card.set?.name || 'Collection'}`}
+                    imageSrc={card.images?.small}
+                    rarity={card.rarity}
+                    type={card.types ? card.types[0] : "Normal"}
+                  />
+                  <div className="card-actions">
+                    <button 
+                      className="view-stats-button" 
+                      onClick={() => handleViewStats(card)}
+                    >
+                      View Stats
+                    </button>
+                    
+                    {isListed ? (
+                      <div className="listing-status">
+                        <p className="listed-price">Listed for: PD {listingDetails.price}</p>
+                        <button 
+                          className="cancel-listing-button" 
+                          onClick={() => handleCancelListing(listingDetails.id)}
+                        >
+                          Remove from Marketplace
+                        </button>
+                      </div>
+                    ) : (
+                      <button 
+                        className="sell-card-button" 
+                        onClick={() => handleSellClick(card)}
+                      >
+                        Sell this Card
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
 

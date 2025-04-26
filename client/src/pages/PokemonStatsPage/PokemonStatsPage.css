@@ -468,3 +468,59 @@
     padding: 10px;
   }
 }
+
+.sell-container {
+  margin-top: 15px;
+  display: flex;
+  justify-content: center;
+}
+
+.sell-button {
+  padding: 10px 15px;
+  background-color: #2ecc71;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  width: 100%;
+  max-width: 200px;
+}
+
+.sell-button:hover {
+  background-color: #27ae60;
+}
+
+.listing-status {
+  margin-top: 15px;
+  padding: 10px;
+  background-color: rgba(104, 144, 240, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(104, 144, 240, 0.3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.listing-info {
+  margin: 0;
+  color: #555;
+  text-align: center;
+}
+
+.cancel-listing-button {
+  padding: 8px 12px;
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s;
+}
+
+.cancel-listing-button:hover {
+  background-color: #c0392b;
+}

@@ -3,6 +3,7 @@ import "./PokemonStatsPage.css"
 import { Link, useParams, useLocation, useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import { useBalance } from '../../context/BalanceContext';
+import SellModal from '../CollectionPage/SellModal';
 
 const PokemonStatsPage = () => {
   const { id } = useParams();
@@ -25,6 +26,10 @@ const PokemonStatsPage = () => {
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const observer = useRef();
+  const [isInCollection, setIsInCollection] = useState(false);
+  const [isListed, setIsListed] = useState(false);
+  const [listingDetails, setListingDetails] = useState(null);
+  const [sellModalOpen, setSellModalOpen] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -36,12 +41,30 @@ const PokemonStatsPage = () => {
       const source = params.get('source');
       const lid = params.get('listingId');
       const p = params.get('price');
+      const ownerParam = params.get('owner');
       
       if (source) {
         setSourceType(source);
         if (lid) setListingId(lid);
         if (p) setPrice(parseInt(p, 10));
       }
+      
+      // If the user owns the card (either from collection or their own marketplace listing)
+      if (ownerParam === 'true') {
+        setIsInCollection(true);
+        
+        // If coming from marketplace and they own it, it's already listed
+        if (source === 'marketplace' && lid) {
+          setIsListed(true);
+          // We'll fetch the listing details later
+        }
+      } else {
+        // Check if this card is in the user's collection
+        checkIfInCollection(id);
+      }
+      
+      // Check if this card is already listed in the marketplace
+      checkIfListed(id);
     } else {
       // Just load featured/random cards for initial view
       fetchFeaturedPokemon();
@@ -54,6 +77,104 @@ const PokemonStatsPage = () => {
       setHasMore(true);
     }
   }, [id, location]);
+
+  const checkIfInCollection = async (pokemonId) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch('http://127.0.0.1:8000/api/collection/', {
+        headers: {
+          'Authorization': `Token ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const inCollection = data.data ? data.data.some(card => card.id === pokemonId) : false;
+        setIsInCollection(inCollection);
+      }
+    } catch (error) {
+      console.error('Error checking collection:', error);
+    }
+  };
+
+  const checkIfListed = async (pokemonId) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch('http://127.0.0.1:8000/api/marketplace/my-listings/', {
+        headers: {
+          'Authorization': `Token ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const listing = data.listings ? data.listings.find(
+          listing => listing.pokemon_id === pokemonId && listing.is_active
+        ) : null;
+        
+        setIsListed(!!listing);
+        setListingDetails(listing);
+      }
+    } catch (error) {
+      console.error('Error checking listings:', error);
+    }
+  };
+
+  const handleSellClick = () => {
+    if (!selectedPokemon) return;
+    setSellModalOpen(true);
+  };
+
+  const handleCloseSellModal = () => {
+    setSellModalOpen(false);
+  };
+
+  const handleListingCreated = () => {
+    // Update the listing status
+    setSellModalOpen(false);
+    checkIfListed(id);
+    alert('Your card has been listed for sale in the marketplace!');
+  };
+
+  const handleCancelListing = async () => {
+    if (!listingDetails) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('Authentication required');
+        return;
+      }
+
+      const response = await fetch('http://127.0.0.1:8000/api/marketplace/cancel-listing/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Token ${token}`
+        },
+        body: JSON.stringify({
+          listing_id: listingDetails.id
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.message || 'Failed to cancel listing');
+      } else {
+        alert('Listing has been removed from the marketplace.');
+        // Update the listing status
+        setIsListed(false);
+        setListingDetails(null);
+      }
+    } catch (err) {
+      alert(`Error: ${err.message}`);
+    }
+  };
 
   const fetchSinglePokemon = async (pokemonId) => {
     setLoading(true);
@@ -381,8 +502,8 @@ const PokemonStatsPage = () => {
                   <p className="flavor-text">"{selectedPokemon.flavorText}"</p>
                 )}
                 
-                {/* Purchase button conditionally shown if we have source and price */}
-                {sourceType && price && (
+                {/* Purchase button conditionally shown if we have source and price and user is not the owner */}
+                {sourceType && price && !isInCollection && (
                   <div className="purchase-container">
                     <p className="card-price"><strong>Price:</strong> PD {price}</p>
                     <button 
@@ -391,6 +512,31 @@ const PokemonStatsPage = () => {
                       disabled={purchasing}
                     >
                       {purchasing ? 'Processing...' : 'Purchase Card'}
+                    </button>
+                  </div>
+                )}
+
+                {/* Show Sell button if the card is in user's collection and not already listed */}
+                {isInCollection && !isListed && (
+                  <div className="sell-container">
+                    <button 
+                      className="sell-button"
+                      onClick={handleSellClick}
+                    >
+                      Sell this Card
+                    </button>
+                  </div>
+                )}
+
+                {/* Show listing info if the card is already listed by the user */}
+                {isInCollection && isListed && listingDetails && (
+                  <div className="listing-status">
+                    <p className="listing-info">This card is listed for <strong>PD {listingDetails.price}</strong></p>
+                    <button 
+                      className="cancel-listing-button"
+                      onClick={handleCancelListing}
+                    >
+                      Remove from Marketplace
                     </button>
                   </div>
                 )}
@@ -517,6 +663,14 @@ const PokemonStatsPage = () => {
           </div>
         )}
       </div>
+
+      {sellModalOpen && selectedPokemon && (
+        <SellModal 
+          card={selectedPokemon} 
+          onClose={handleCloseSellModal} 
+          onListingCreated={handleListingCreated}
+        />
+      )}
     </div>
   );
 };
